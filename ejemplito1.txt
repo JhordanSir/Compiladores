@@ -1,0 +1,3 @@
+ruray hatun_ruray() {
+    imprimiy("¡Allin punchaw, Pachamama!");
+}
