@@ -1,4 +1,6 @@
 import ply.lex as lex
+from prettytable import PrettyTable
+
 
 tokens = [
     'YUPAY_TOKEN',
@@ -46,6 +48,7 @@ tokens = [
     'PALABRA_RESERVADA_TAKYAQ',
     'PALABRA_RESERVADA_UYWA',
     'PALABRA_RESERVADA_UYA',
+    'HATUN_RURAY_TOKEN',
 ]
 
 reserved_words = {
@@ -90,19 +93,24 @@ t_PUNTO_TOKEN      = r'\.'
 t_DOS_PUNTOS_TOKEN = r':'
 t_PUNTO_Y_COMA_TOKEN = r';'
 
-def t_YUPAY_TOKEN(t):
-    r'\d+'
-    t.value = int(t.value)
-    return t
-
 def t_CHIQI_KAY_TOKEN(t):
     r'\d+\.\d+'
     t.value = float(t.value)
     return t
 
+def t_YUPAY_TOKEN(t):
+    r'\d+'
+    t.value = int(t.value)
+    return t
+
+
 def t_QILLQA_TOKEN(t):
     r'("([^"]*)")|(\'([^\']*)\')'
     t.value = t.value[1:-1]
+    return t
+
+def t_HATUN_RURAY_TOKEN(t):
+    r'hatun_ruray'
     return t
 
 def t_IDENTIFICADOR_TOKEN(t):
@@ -131,6 +139,7 @@ def t_comment_COMENTARIO_TOKEN_BLOQUE_CIERRA(t):
 
 def t_comment_error(t):
     print(f">> ERROR en comentario de bloque en pos {t.lexer.comment_start}: '{t.value[0]}'")
+    print(f"Estado Actual: {t.lexer.current_state()}")
     t.lexer.skip(1)
 
 def t_comment_newline(t):
@@ -151,7 +160,7 @@ def t_newline(t):
     t.lexer.lineno += len(t.value)
 
 def t_ANY_error(t): 
-    print(f"Carácter ilegal '{t.value[0]}' en la línea {t.lineno}, posición {t.lexpos}, estado: {t.lexer.current_state()}")
+    print(f"Carácter alterno '{t.value[0]}' en la línea {t.lineno}, posición {t.lexpos}, estado: {t.lexer.current_state()}")
     t.lexer.skip(1)
 
 lexer = lex.lex()
@@ -167,22 +176,24 @@ def analyze_file(filepath):
     lexer.input(data)
     tokens_list = []
 
+    table = PrettyTable(["Tipo", "Valor", "Línea", "Posición"])
+
     while True:
         tok = lexer.token()
         if not tok:
             break
         tokens_list.append(tok)
-        print(tok)
-
+        table.add_row([tok.type, tok.value, tok.lineno, tok.lexpos])
+    print(table)
     return tokens_list
 
 if __name__ == '__main__':
     example_files = [
-        "d:\\uSalle\\Software\\ejemplito1.txt",
-        "d:\\uSalle\\Software\\ejemplito2.txt",
-        "d:\\uSalle\\Software\\ejemplito3.txt",
-        "d:\\uSalle\\Software\\ejemplito4.txt",
-        "d:\\uSalle\\Software\\ejemplito5.txt"
+        "ejemplito1.txt",
+        "ejemplito2.txt",
+        "ejemplito3.txt",
+        "ejemplito4.txt",
+        "ejemplito5.txt"
     ]
 
     for filepath in example_files:
