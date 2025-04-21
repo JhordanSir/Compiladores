@@ -101,7 +101,27 @@ def parser_ll1(input_string, parsing_table):
     print("\n❌ Entrada incompleta o mal formada")
     return None 
 
-tabla = cargar_tabla_desde_csv("C:\\xd\\Compiladores\\Analizador sintáctico (bottom-up)\\tablita.csv")
+def generar_graphviz(nodo, archivo, contador=[0], conexiones=[]):
+    id_actual = contador[0]
+    archivo.write(f'  node{id_actual} [label="{nodo.valor}"];\n')
+    nodo_id = id_actual
+    contador[0] += 1
+    for hijo in nodo.hijos:
+        hijo_id = contador[0]
+        conexiones.append((nodo_id, hijo_id))
+        generar_graphviz(hijo, archivo, contador, conexiones)
+    return conexiones
+
+def exportar_arbol_a_graphviz(raiz, nombre_archivo="arbol.txt"):
+    with open(nombre_archivo, "w", encoding="utf-8") as archivo:
+        archivo.write("digraph G {\n")
+        conexiones = []
+        generar_graphviz(raiz, archivo, [0], conexiones)
+        for origen, destino in conexiones:
+            archivo.write(f"  node{origen} -> node{destino};\n")
+        archivo.write("}\n")
+
+tabla = cargar_tabla_desde_csv("tablita.csv")
 
 entrada = "( int + int )"
 
@@ -115,5 +135,8 @@ if arbol:
     
     print("\n\nEstructura del árbol sintáctico:")
     imprimir_arbol(arbol)
+
+    exportar_arbol_a_graphviz(arbol, "arbol.txt")
+    print('\nCódigo Graphviz exportado a "arbol.txt"')
 else:
     print("\n❌ Entrada rechazada")
