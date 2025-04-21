@@ -137,6 +137,5 @@ if arbol:
     imprimir_arbol(arbol)
 
     exportar_arbol_a_graphviz(arbol, "arbol.txt")
-    print('\nCódigo Graphviz exportado a "arbol.txt"')
 else:
     print("\n❌ Entrada rechazada")
