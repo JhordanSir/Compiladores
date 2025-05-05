@@ -1,0 +1,151 @@
+<Program> ::= <DefinitionList> <Principal>
+
+<Principal> ::= <PALABRA_RESERVADA_RURAY> <PALABRA_RESERVADA_FUNCION_PRINCIPAL> <PARENTESIS_ABRE> <PARENTESIS_CIERRA> <Block>
+
+<DefinitionList> ::= <Definition> <DefinitionList> | E
+
+<Definition> ::= <FunctionDef>
+
+<FunctionDef> ::= <PALABRA_RESERVADA_RURAY> <IDENTIFICADOR_TOKEN> <PARENTESIS_ABRE> <ParamListOpt> <PARENTESIS_CIERRA> <TypeOpt> <Block>
+
+<ParamListOpt> ::= <ParamList> | E
+
+<ParamList> ::= <Param> <MoreParams>
+
+<MoreParams> ::= <COMA_TOKEN> <Param> <MoreParams> | E
+
+<Param> ::= <Type> ":" <IDENTIFICADOR_TOKEN> 
+
+<Type> ::= "yupay" | "chiqi"  | "chiqap" | "qillqa"
+
+<TypeOpt> ::= <Type>
+           | E
+
+<Block> ::= <LLAVE_ABRE> <Instrucciones> <LLAVE_CIERRA>
+
+<Instrucciones> ::= <Instruccion> <Instrucciones>
+                 | E
+
+<Instruccion> ::= <declaracion_variables>
+    | <PrintStmt>
+    | <Bucle>
+    | <Estructura_If>
+    | <Retorno>
+    | <incrementos> <PUNTO_Y_COMA_TOKEN>
+
+<declaracion_variables> ::= "var" <seguidos> <Type> <cont> <PUNTO_Y_COMA_TOKEN>
+    | <seguidos> <OPERADOR_ASIGNACION> <datos> <PUNTO_Y_COMA_TOKEN>
+    | <IDENTIFICADOR_TOKEN> <OPERADOR_ASIGNACION> <opciones> <PUNTO_Y_COMA_TOKEN>
+
+<seguidos> ::= <IDENTIFICADOR_TOKEN> <seg>
+<seg> ::= <COMA_TOKEN> <IDENTIFICADOR_TOKEN> <seg> | E
+<cont> ::= "=" <datos> | E
+
+<PrintStmt> ::= <PALABRA_RESERVADA_IMPRIMIY> <PARENTESIS_ABRE> <ArgumentPrint> <PARENTESIS_CIERRA> <PUNTO_Y_COMA_TOKEN>
+<ArgumentPrint> ::= <opciones> <ArgumentPrint_seguir> | E
+<ArgumentPrint_seguir> ::= <COMA_TOKEN> <opciones> <ArgumentPrint_seguir> | E
+
+<opciones> ::= <funcion> 
+    | <comparacion> 
+    | <IDENTIFICADOR_TOKEN> 
+    | <datos> 
+    | <operaciones_matematicas>
+    | <incrementos>
+    
+<incrementos> ::= <IDENTIFICADOR_TOKEN> "++" 
+    | <IDENTIFICADOR_TOKEN> "--"
+
+<operaciones_matematicas> ::= # HEY TÚ, AQUÍ TE FALTA, APURA HAZ
+
+<funcion> ::= <IDENTIFICADOR_TOKEN> <PARENTESIS_ABRE> <argumentosFuncion> <PARENTESIS_CIERRA>
+
+<comparacion> ::= <logical_expression>
+<logical_expression> ::= <OPERADOR_LOGICO_MANA> <PARENTESIS_ABRE> <expression> <PARENTESIS_CIERRA> 
+    | <PARENTESIS_ABRE> <expression> <PARENTESIS_CIERRA> 
+    | <expression> 
+
+<expression> ::= <compa> <expression_conti> 
+<expression_conti> ::= <opciones_operador_logico> <expression> 
+    | E
+<compa> ::= <opciones> <opciones_operador_comparacion> <opciones> 
+    | <opciones> <opciones_operador_logico> <opciones>
+
+<argumentosFuncion> ::= <opciones> <argumentosFuncion_seguir> | E
+<argumentosFuncion_seguir> ::= <COMA_TOKEN> <opciones> <argumentosFuncion_seguir> | E
+
+<Bucle> ::= <for> | <while> | <bucle_infinito>
+
+<for> ::= <PALABRA_RESERVADA_PARA> <PARENTESIS_ABRE> <LoopInitialization> <PUNTO_Y_COMA_TOKEN> <opciones> <PUNTO_Y_COMA_TOKEN> <LoopUpdate> <PARENTESIS_CIERRA> <Block>
+
+<while> ::= <PALABRA_RESERVADA_PARA> <PARENTESIS_ABRE> <opciones> <PARENTESIS_CIERRA> <Block>
+
+<bucle_infinito> ::= <PALABRA_RESERVADA_PARA> <Block>
+
+<LoopInitialization> ::= <IDENTIFICADOR_TOKEN> <OPERADOR_ASIGNACION> <asignacion_bucle>
+
+<asignacion_bucle> ::= <funcion> 
+    | <IDENTIFICADOR_TOKEN> 
+    | <datos> 
+    | <operaciones_matematicas>
+
+<LoopUpdate> ::= <operaciones_matematicas>
+
+<Estructura_If> ::= <PALABRA_RESERVADA_SICHUS> <PARENTESIS_ABRE> <opciones> <PARENTESIS_CIERRA> <Block> <Else_opcional>
+<Else_opcional> ::= <PALABRA_RESERVADA_MANA_SICHUS> <argumentosELseIf> <Block> | E
+<argumentosELseIf> ::= <PARENTESIS_ABRE> <opciones> <PARENTESIS_CIERRA> | E
+
+<Retorno> ::= <PALABRA_RESERVADA_KUTIPAY> <IDENTIFICADOR_TOKEN> <PUNTO_Y_COMA_TOKEN>
+    | <PALABRA_RESERVADA_KUTIPAY> <PUNTO_Y_COMA_TOKEN>
+    | <PALABRA_RESERVADA_KUTIPAY> <datos> <PUNTO_Y_COMA_TOKEN>
+    | "pakiy" <PUNTO_Y_COMA_TOKEN>
+
+<PALABRA_RESERVADA_FUNCION_PRINCIPAL> ::= "hatun_ruray"
+<PALABRA_RESERVADA_RURAY> ::= "ruray"
+<PALABRA_RESERVADA_IMPRIMIY> ::= "imprimiy"
+<PALABRA_RESERVADA_PARA> ::= "para"
+<PALABRA_RESERVADA_SICHUS> ::= "sichus"
+<PALABRA_RESERVADA_MANA_SICHUS> ::= "mana_sichus"
+<PALABRA_RESERVADA_KUTIPAY> ::= "kutipay"
+
+<IDENTIFICADOR_TOKEN> ::= "id"
+
+<YUPAY_TOKEN> ::= "num"
+<CHIQI_TOKEN> ::= "num" "." "num"
+<CHIQAP_TOKEN> ::= "chiqaq" | "mana_chiqaq"
+<QILLQA_TOKEN> ::= "texto"
+<datos> ::= <YUPAY_TOKEN>
+    | <CHIQI_TOKEN> 
+    | <CHIQAP_TOKEN> 
+    | <QILLQA_TOKEN>
+
+<OPERADOR_ASIGNACION> ::= ":="
+
+<OPERADOR_LOGICO_UTAQ> ::= "utaq"
+<OPERADOR_LOGICO_WAN> ::= "wan"
+<OPERADOR_LOGICO_MANA> ::= "mana"
+
+<opciones_operador_comparacion> ::= <OPERADOR_IGUALDAD> | <OPERADOR_MANA_IGUAL> | <OPERADOR_MENOR> | <OPERADOR_MAYOR> | <OPERADOR_MENOR_IGUAL> | <OPERADOR_MAYOR_IGUAL>
+<opciones_operador_logico> ::= <OPERADOR_LOGICO_WAN> | <OPERADOR_LOGICO_UTAQ>
+
+<OPERADOR_IGUALDAD> ::= "=="
+<OPERADOR_MANA_IGUAL> ::= "!="
+<OPERADOR_MENOR> ::= "<"
+<OPERADOR_MAYOR> ::= ">"
+<OPERADOR_MENOR_IGUAL> ::= "<="
+<OPERADOR_MAYOR_IGUAL> ::= ">="
+
+<OPERADOR_MAS> ::= "+"
+<OPERADOR_MENOS> ::= "-"
+
+<OPERADOR_PACHA> ::= "*"
+<OPERADOR_RAKI> ::= "/"
+<OPERADOR_MODULO> ::= "%"
+
+<PARENTESIS_ABRE> ::= "("
+<PARENTESIS_CIERRA> ::= ")"
+
+<LLAVE_ABRE> ::= "{"
+<LLAVE_CIERRA> ::= "}"
+
+<COMA_TOKEN> ::= ","
+<PUNTO_Y_COMA_TOKEN> ::= ";"
