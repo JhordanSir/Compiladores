@@ -138,10 +138,10 @@ class GramaticaAnalyzer:
 
 def main():
     analizador = GramaticaAnalyzer()
-    analizador.leer_gramatica('E:\\Compiladores\\Examen Parcial\\GramaticaBNF.txt')
+    analizador.leer_gramatica('E:\\Compiladores\\Examen Parcial\\Analizador\\GramaticaBNF.txt')
     analizador.calcular_first()
     analizador.calcular_follow()
-    analizador.guardar_csv('e:\\Compiladores\\Examen Parcial\\primerosYsiguientes.csv')
+    analizador.guardar_csv('E:\\Compiladores\\Examen Parcial\\Tablas\\primerosYsiguientes.csv')
 
 if __name__ == '__main__':
     main()

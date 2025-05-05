@@ -101,6 +101,6 @@ def main(archivo_entrada, archivo_salida):
     guardar_csv(tabla, terminales, no_terminales, archivo_salida)
 
 if __name__ == '__main__':
-    archivo_entrada = "E:\\Compiladores\\Examen Parcial\\GramaticaBNF.txt"
-    archivo_salida = "E:\\Compiladores\\Examen Parcial\\tablaTransiciones.csv"
+    archivo_entrada = "E:\\Compiladores\\Examen Parcial\\Analizador\\GramaticaBNF.txt"
+    archivo_salida = "E:\\Compiladores\\Examen Parcial\\Tablas\\tablaTransiciones.csv"
     main(archivo_entrada, archivo_salida)
