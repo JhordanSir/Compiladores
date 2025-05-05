@@ -1,0 +1,61 @@
+No Terminal,FIRST,FOLLOW
+ArgumentPrint,"(, -, chiqaq, epsilon, id, mana, mana_chiqaq, num, texto",)
+Block,{,"$, id, imprimiy, kutipay, mana_sichus, pakiy, para, ruray, sichus, var, }"
+Bucle,para,"id, imprimiy, kutipay, pakiy, para, sichus, var, }"
+CHIQAP_TOKEN,"chiqaq, mana_chiqaq","!=, %, ), *, +, ,, -, /, ;, <, <=, ==, >, >=, utaq, wan"
+CHIQI_TOKEN,num,"!=, %, ), *, +, ,, -, /, ;, <, <=, ==, >, >=, utaq, wan"
+DeclaracionVariables,"id, var","id, imprimiy, kutipay, pakiy, para, sichus, var, }"
+DefinitionList,"epsilon, ruray",ruray
+Else_opcional,"epsilon, mana_sichus","id, imprimiy, kutipay, pakiy, para, sichus, var, }"
+Estructura_If,sichus,"id, imprimiy, kutipay, pakiy, para, sichus, var, }"
+FunctionDef,ruray,ruray
+IDENTIFICADOR_TOKEN,id,"!=, %, (, ), *, +, ++, ,, -, --, /, :=, ;, <, <=, ==, >, >=, chiqap, chiqi, qillqa, utaq, wan, yupay"
+InicializacionOpt,"=, epsilon",;
+Instruccion,"id, imprimiy, kutipay, pakiy, para, sichus, var","id, imprimiy, kutipay, pakiy, para, sichus, var, }"
+Instrucciones,"epsilon, id, imprimiy, kutipay, pakiy, para, sichus, var",}
+ListaIdentificadores,id,":=, chiqap, chiqi, qillqa, yupay"
+LoopInitialization,id,;
+LoopUpdate,"(, -, chiqaq, id, mana_chiqaq, num, texto",)
+MasArgumentosFuncion,",, epsilon",)
+MasArgumentosPrint,",, epsilon",)
+MasIdentificadores,",, epsilon",":=, chiqap, chiqi, qillqa, yupay"
+MoreParams,",, epsilon",)
+OPERADOR_ASIGNACION,:=,
+OPERADOR_LOGICO_MANA,mana,
+OPERADOR_LOGICO_UTAQ,utaq,
+OPERADOR_LOGICO_WAN,wan,
+Param,"chiqap, chiqi, qillqa, yupay","), ,"
+ParamList,"chiqap, chiqi, qillqa, yupay",)
+ParamListOpt,"chiqap, chiqi, epsilon, qillqa, yupay",)
+Principal,ruray,$
+PrintStmt,imprimiy,"id, imprimiy, kutipay, pakiy, para, sichus, var, }"
+Program,ruray,$
+QILLQA_TOKEN,texto,"!=, %, ), *, +, ,, -, /, ;, <, <=, ==, >, >=, utaq, wan"
+Retorno,"kutipay, pakiy","id, imprimiy, kutipay, pakiy, para, sichus, var, }"
+Type,"chiqap, chiqi, qillqa, yupay",":, =, id, imprimiy, kutipay, pakiy, para, sichus, var, {, }"
+TypeOpt,"chiqap, chiqi, epsilon, qillqa, yupay",{
+YUPAY_TOKEN,num,"!=, %, ), *, +, ,, -, /, ;, <, <=, ==, >, >=, utaq, wan"
+argumentosELseIf,"(, epsilon",{
+argumentosFuncion,"(, -, chiqaq, epsilon, id, mana, mana_chiqaq, num, texto",)
+asignacion_bucle,"(, -, chiqaq, id, mana_chiqaq, num, texto",;
+bucle_infinito,para,"id, imprimiy, kutipay, pakiy, para, sichus, var, }"
+compa,"(, -, chiqaq, id, mana, mana_chiqaq, num, texto","!=, ), ,, ;, <, <=, ==, >, >=, utaq, wan"
+comparacion,"(, -, chiqaq, id, mana, mana_chiqaq, num, texto","!=, ), ,, ;, <, <=, ==, >, >=, utaq, wan"
+datos,"(, -, chiqaq, id, mana_chiqaq, num, texto","!=, ), ,, ;, <, <=, ==, >, >=, utaq, wan"
+expresion_tail,"+, -, epsilon","!=, ), ,, ;, <, <=, ==, >, >=, utaq, wan"
+expression,"(, -, chiqaq, id, mana, mana_chiqaq, num, texto","!=, ), ,, ;, <, <=, ==, >, >=, utaq, wan"
+expression_conti,"epsilon, utaq, wan","!=, ), ,, ;, <, <=, ==, >, >=, utaq, wan"
+factor,"(, -, chiqaq, id, mana_chiqaq, num, texto","!=, %, ), *, +, ,, -, /, ;, <, <=, ==, >, >=, utaq, wan"
+for,para,"id, imprimiy, kutipay, pakiy, para, sichus, var, }"
+funcion,id,"!=, %, ), *, +, ,, -, /, ;, <, <=, ==, >, >=, utaq, wan"
+incrementos,id,"!=, ), ,, ;, <, <=, ==, >, >=, utaq, wan"
+logical_expression,"(, -, chiqaq, id, mana, mana_chiqaq, num, texto","!=, ), ,, ;, <, <=, ==, >, >=, utaq, wan"
+opciones,"(, -, chiqaq, id, mana, mana_chiqaq, num, texto","!=, ), ,, ;, <, <=, ==, >, >=, utaq, wan"
+opciones_operador_comparacion,"!=, <, <=, ==, >, >=","(, -, chiqaq, id, mana, mana_chiqaq, num, texto"
+opciones_operador_logico,"utaq, wan","(, -, chiqaq, id, mana, mana_chiqaq, num, texto"
+operaciones_matematicas,"(, -, chiqaq, id, mana_chiqaq, num, texto","!=, ), ,, ;, <, <=, ==, >, >=, utaq, wan"
+termino,"(, -, chiqaq, id, mana_chiqaq, num, texto","!=, ), +, ,, -, ;, <, <=, ==, >, >=, utaq, wan"
+termino_tail,"%, *, /, epsilon","!=, ), +, ,, -, ;, <, <=, ==, >, >=, utaq, wan"
+unidad,"(, chiqaq, id, mana_chiqaq, num, texto","!=, %, ), *, +, ,, -, /, ;, <, <=, ==, >, >=, utaq, wan"
+valor,"chiqaq, id, mana_chiqaq, num, texto","!=, %, ), *, +, ,, -, /, ;, <, <=, ==, >, >=, utaq, wan"
+while,para,"id, imprimiy, kutipay, pakiy, para, sichus, var, }"

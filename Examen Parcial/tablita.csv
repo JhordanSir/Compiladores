@@ -1,5 +1,0 @@
-,int,*,+,(,),$
-E,T X,,,T X,,
-X,,,+ E,,epsilon,epsilon
-T,int Y,,,( E ),,
-Y,,* T,epsilon,,epsilon,epsilon
