@@ -14,28 +14,27 @@ class Nodo:
             hijo.imprimir_preorden()
 
 def imprimir_arbol(nodo, nivel=0, prefijo='', es_ultimo=True):
-    
     espacio = '    '
     rama = '│   '
     rama_esquina = '└── '
     rama_t = '|── '
-    
+
     conector = rama_esquina if es_ultimo else rama_t
-    
+
     if nivel > 0:
         print(f"{prefijo}{conector}{nodo.valor}")
     else:
-        print(f"{espacio}{nodo.valor}") 
+        print(f"{espacio}{nodo.valor}")
 
     nuevo_prefijo = prefijo + (espacio if es_ultimo else rama)
-    
+
     num_hijos = len(nodo.hijos)
     for i, hijo in enumerate(nodo.hijos):
         imprimir_arbol(hijo, nivel + 1, nuevo_prefijo, i == num_hijos - 1)
 
 def cargar_tabla_desde_csv(nombre_archivo):
     tabla = {}
-    with open(nombre_archivo, newline='') as csvfile:
+    with open(nombre_archivo, newline='', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile)
         encabezado = next(reader)[1:]
 
@@ -51,9 +50,9 @@ def cargar_tabla_desde_csv(nombre_archivo):
 def parser_ll1(input_string, parsing_table):
     tokens = input_string.split() + ['$']
     index = 0
-    
-    raiz = Nodo('E')
-    stack = [('$', None), ('E', raiz)] 
+
+    raiz = Nodo('Principal')
+    stack = [('$', None), ('Principal', raiz)]
 
     print(f"{'Stack':<25}{'Input':<25}{'Action'}")
 
@@ -65,26 +64,25 @@ def parser_ll1(input_string, parsing_table):
         input_str = ' '.join(tokens[index:])
         print(f"{stack_str:<25}{input_str:<25}", end='')
 
-        if top_symbol == 'epsilon':
+        if top_symbol == "epsilon":
             print("ε")
             continue
         elif top_symbol == current_token:
             print("terminal")
-            index += 1 
+            index += 1
         elif top_symbol in parsing_table:
             rule = parsing_table[top_symbol].get(current_token)
             if rule:
                 production = ' '.join(rule)
-                print(f"{top_symbol} → {production}") 
+                print(f"{top_symbol} → {production}")
 
                 child_nodes = []
                 for symbol in rule:
                     child = Nodo(symbol)
                     top_node.agregar_hijo(child)
-                    
-                    if symbol != 'epsilon':
+                    if symbol != "''":
                         child_nodes.append((symbol, child))
-                
+
                 for symbol_node in reversed(child_nodes):
                     stack.append(symbol_node)
             else:
@@ -96,10 +94,10 @@ def parser_ll1(input_string, parsing_table):
 
         if top_symbol == '$' and current_token == '$':
             print(f"{'$':<25}{'$':<25}ACCEPT")
-            return raiz 
+            return raiz
 
     print("\n❌ Entrada incompleta o mal formada")
-    return None 
+    return None
 
 def generar_graphviz(nodo, archivo, contador=[0], conexiones=[]):
     id_actual = contador[0]
@@ -121,21 +119,21 @@ def exportar_arbol_a_graphviz(raiz, nombre_archivo="arbol.txt"):
             archivo.write(f"  node{origen} -> node{destino};\n")
         archivo.write("}\n")
 
-tabla = cargar_tabla_desde_csv("tablita.csv")
+tabla = cargar_tabla_desde_csv("d:\\Compiladores\\Examen Parcial\\Tablas\\tablaTransiciones.csv")
 
-entrada = "( int + int )"
+entrada = " ruray hatun_ruray ( ) { } "  # No acepta más cosas que esto, ya que mis compañeritos solo quieren jugar minecraft y mimir. Asu, profe jalelos. Toda la vida carreados.
 
 arbol = parser_ll1(entrada, tabla)
 
 if arbol:
     print("\n✅ Entrada aceptada")
-    
+
     print("\nÁrbol sintáctico en preorder:")
     arbol.imprimir_preorden()
-    
+
     print("\n\nEstructura del árbol sintáctico:")
     imprimir_arbol(arbol)
 
-    exportar_arbol_a_graphviz(arbol, "arbol.txt")
+    exportar_arbol_a_graphviz(arbol, "arbol2.txt")
 else:
     print("\n❌ Entrada rechazada")

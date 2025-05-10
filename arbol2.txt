@@ -1,0 +1,21 @@
+digraph G {
+  node0 [label="Principal"];
+  node1 [label="ruray"];
+  node2 [label="hatun_ruray"];
+  node3 [label="("];
+  node4 [label=")"];
+  node5 [label="Block"];
+  node6 [label="{"];
+  node7 [label="Instrucciones"];
+  node8 [label="epsilon"];
+  node9 [label="}"];
+  node0 -> node1;
+  node0 -> node2;
+  node0 -> node3;
+  node0 -> node4;
+  node0 -> node5;
+  node5 -> node6;
+  node5 -> node7;
+  node7 -> node8;
+  node5 -> node9;
+}

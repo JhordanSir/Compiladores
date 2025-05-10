@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import arbolText from '../../../arbol.txt?raw';
+//import arbolText from '../../../arbol.txt?raw';
+import arbolText from '../../../../arbol2.txt?raw';
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
@@ -112,7 +113,7 @@ function drawTree(node, x, y, z, parentMesh, level = 0, siblingIndex = 0, siblin
         cylinder.rotateX(Math.PI / 2);
         scene.add(cylinder);
     }
-    const baseSpread = 7.0;
+    const baseSpread = 5.0;
     
     const childSpreadFactor = Math.max(1.5, node.children.length / 1.5);
     const spread = baseSpread * childSpreadFactor / Math.sqrt(level + 1);

@@ -1,61 +1,61 @@
 Program -> DefinitionList Principal
 
 DefinitionList -> FunctionDef DefinitionList
-DefinitionList -> ''
+DefinitionList -> E
 
-FunctionDef -> ruray IDENTIFICADOR_TOKEN ( ParamListOpt ) TypeOpt Block
+FunctionDef -> "ruray" IDENTIFICADOR_TOKEN "(" ParamListOpt ")" TypeOpt Block
 
-Principal -> ruray hatun_ruray ( ) Block
+Principal -> "ruray" "hatun_ruray" "(" ")" Block
 
 ParamListOpt -> ParamList
-ParamListOpt -> ''
+ParamListOpt -> E
 
 ParamList -> Param MoreParams
 
-MoreParams -> , Param MoreParams
-MoreParams -> ''
+MoreParams -> "," Param MoreParams
+MoreParams -> E
 
-Param -> Type : IDENTIFICADOR_TOKEN
+Param -> Type ":" IDENTIFICADOR_TOKEN
 
-Type -> yupay
-Type -> chiqi
-Type -> chiqap
-Type -> qillqa
+Type -> "yupay"
+Type -> "chiqi"
+Type -> "chiqap"
+Type -> "qillqa"
 
 TypeOpt -> Type
-TypeOpt -> ''
+TypeOpt -> E
 
-Block -> { Instrucciones }
+Block -> "{" Instrucciones "}"
 
 Instrucciones -> Instruccion Instrucciones
-Instrucciones -> ''
+Instrucciones -> E
 
 Instruccion -> DeclaracionVariables
 Instruccion -> PrintStmt
 Instruccion -> Bucle
 Instruccion -> Estructura_If
 Instruccion -> Retorno
-Instruccion -> incrementos ;
+Instruccion -> incrementos ";"
 
-DeclaracionVariables -> var ListaIdentificadores Type InicializacionOpt ;
-DeclaracionVariables -> ListaIdentificadores := opciones ;
-DeclaracionVariables -> IDENTIFICADOR_TOKEN := opciones ;
+DeclaracionVariables -> "var" ListaIdentificadores Type InicializacionOpt ";"
+DeclaracionVariables -> ListaIdentificadores ":=" opciones ";"
+DeclaracionVariables -> IDENTIFICADOR_TOKEN ":=" opciones ";"
 
 ListaIdentificadores -> IDENTIFICADOR_TOKEN MasIdentificadores
 
-MasIdentificadores -> , IDENTIFICADOR_TOKEN MasIdentificadores
-MasIdentificadores -> ''
+MasIdentificadores -> "," IDENTIFICADOR_TOKEN MasIdentificadores
+MasIdentificadores -> E
 
-InicializacionOpt -> = opciones
-InicializacionOpt -> ''
+InicializacionOpt -> "=" opciones
+InicializacionOpt -> E
 
-PrintStmt -> imprimiy ( ArgumentPrint ) ;
+PrintStmt -> "imprimiy" "(" ArgumentPrint ")" ";"
 
 ArgumentPrint -> opciones MasArgumentosPrint
-ArgumentPrint -> ''
+ArgumentPrint -> E
 
-MasArgumentosPrint -> , opciones MasArgumentosPrint
-MasArgumentosPrint -> ''
+MasArgumentosPrint -> "," opciones MasArgumentosPrint
+MasArgumentosPrint -> E
 
 opciones -> funcion
 opciones -> comparacion
@@ -64,27 +64,27 @@ opciones -> datos
 opciones -> operaciones_matematicas
 opciones -> incrementos
 
-incrementos -> IDENTIFICADOR_TOKEN ++
-incrementos -> IDENTIFICADOR_TOKEN --
+incrementos -> IDENTIFICADOR_TOKEN "++"
+incrementos -> IDENTIFICADOR_TOKEN "--"
 
 operaciones_matematicas -> termino expresion_tail
 
-expresion_tail -> + termino expresion_tail
-expresion_tail -> - termino expresion_tail
-expresion_tail -> ''
+expresion_tail -> "+" termino expresion_tail
+expresion_tail -> "-" termino expresion_tail
+expresion_tail -> E
 
 termino -> factor termino_tail
 
-termino_tail -> * factor termino_tail
-termino_tail -> / factor termino_tail
-termino_tail -> % factor termino_tail
-termino_tail -> ''
+termino_tail -> "*" factor termino_tail
+termino_tail -> "/" factor termino_tail
+termino_tail -> "%" factor termino_tail
+termino_tail -> E
 
 factor -> unidad
-factor -> - unidad
+factor -> "-" unidad
 
 unidad -> valor
-unidad -> ( operaciones_matematicas )
+unidad -> "(" operaciones_matematicas ")"
 
 valor -> YUPAY_TOKEN
 valor -> CHIQI_TOKEN
@@ -93,24 +93,24 @@ valor -> QILLQA_TOKEN
 valor -> IDENTIFICADOR_TOKEN
 valor -> funcion
 
-funcion -> IDENTIFICADOR_TOKEN ( argumentosFuncion )
+funcion -> IDENTIFICADOR_TOKEN "(" argumentosFuncion ")"
 
 argumentosFuncion -> opciones MasArgumentosFuncion
-argumentosFuncion -> ''
+argumentosFuncion -> E
 
-MasArgumentosFuncion -> , opciones MasArgumentosFuncion
-MasArgumentosFuncion -> ''
+MasArgumentosFuncion -> "," opciones MasArgumentosFuncion
+MasArgumentosFuncion -> E
 
 comparacion -> logical_expression
 
-logical_expression -> mana ( expression )
-logical_expression -> ( expression )
+logical_expression -> "mana" "(" expression ")"
+logical_expression -> "(" expression ")"
 logical_expression -> expression
 
 expression -> compa expression_conti
 
 expression_conti -> opciones_operador_logico expression
-expression_conti -> ''
+expression_conti -> E
 
 compa -> opciones opciones_operador_comparacion opciones
 compa -> opciones opciones_operador_logico opciones
@@ -119,13 +119,13 @@ Bucle -> for
 Bucle -> while
 Bucle -> bucle_infinito
 
-for -> para ( LoopInitialization ; opciones ; LoopUpdate ) Block
+for -> "para" "(" LoopInitialization ";" opciones ";" LoopUpdate ")" Block
 
-while -> para ( opciones ) Block
+while -> "para" "(" opciones ")" Block
 
-bucle_infinito -> para Block
+bucle_infinito -> "para" Block
 
-LoopInitialization -> IDENTIFICADOR_TOKEN := asignacion_bucle
+LoopInitialization -> IDENTIFICADOR_TOKEN ":=" asignacion_bucle
 
 asignacion_bucle -> funcion
 asignacion_bucle -> IDENTIFICADOR_TOKEN
@@ -133,18 +133,18 @@ asignacion_bucle -> datos
 
 LoopUpdate -> operaciones_matematicas
 
-Estructura_If -> sichus ( opciones ) Block Else_opcional
+Estructura_If -> "sichus" "(" opciones ")" Block Else_opcional
 
-Else_opcional -> mana_sichus argumentosELseIf Block
-Else_opcional -> ''
+Else_opcional -> "mana_sichus" argumentosELseIf Block
+Else_opcional -> E
 
-argumentosELseIf -> ( opciones )
-argumentosELseIf -> ''
+argumentosELseIf -> "(" opciones ")"
+argumentosELseIf -> E
 
-Retorno -> kutipay IDENTIFICADOR_TOKEN ;
-Retorno -> kutipay ;
-Retorno -> kutipay datos ;
-Retorno -> pakiy ;
+Retorno -> "kutipay" IDENTIFICADOR_TOKEN ";"
+Retorno -> "kutipay" ";"
+Retorno -> "kutipay" datos ";"
+Retorno -> "pakiy" ";"
 
 datos -> YUPAY_TOKEN
 datos -> CHIQI_TOKEN
@@ -153,24 +153,24 @@ datos -> QILLQA_TOKEN
 datos -> operaciones_matematicas
 datos -> IDENTIFICADOR_TOKEN
 
-YUPAY_TOKEN -> num
-CHIQI_TOKEN -> num . num
-CHIQAP_TOKEN -> chiqaq
-CHIQAP_TOKEN -> mana_chiqaq
-QILLQA_TOKEN -> texto
-IDENTIFICADOR_TOKEN -> id
+YUPAY_TOKEN -> "num"
+CHIQI_TOKEN -> "num" "." "num"
+CHIQAP_TOKEN -> "chiqaq"
+CHIQAP_TOKEN -> "mana_chiqaq"
+QILLQA_TOKEN -> "texto"
+IDENTIFICADOR_TOKEN -> "id"
 
-OPERADOR_ASIGNACION -> :=
-OPERADOR_LOGICO_UTAQ -> utaq
-OPERADOR_LOGICO_WAN -> wan
-OPERADOR_LOGICO_MANA -> mana
+OPERADOR_ASIGNACION -> ":="
+OPERADOR_LOGICO_UTAQ -> "utaq"
+OPERADOR_LOGICO_WAN -> "wan"
+OPERADOR_LOGICO_MANA -> "mana"
 
-opciones_operador_logico -> wan
-opciones_operador_logico -> utaq
+opciones_operador_logico -> "wan"
+opciones_operador_logico -> "utaq"
 
-opciones_operador_comparacion -> ==
-opciones_operador_comparacion -> !=
-opciones_operador_comparacion -> <
-opciones_operador_comparacion -> >
-opciones_operador_comparacion -> <=
-opciones_operador_comparacion -> >=
+opciones_operador_comparacion -> "=="
+opciones_operador_comparacion -> "!="
+opciones_operador_comparacion -> "<"
+opciones_operador_comparacion -> ">"
+opciones_operador_comparacion -> "<="
+opciones_operador_comparacion -> ">="
