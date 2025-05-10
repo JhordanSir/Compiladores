@@ -1,0 +1,176 @@
+Program -> DefinitionList Principal
+
+DefinitionList -> FunctionDef DefinitionList
+DefinitionList -> ''
+
+FunctionDef -> ruray IDENTIFICADOR_TOKEN ( ParamListOpt ) TypeOpt Block
+
+Principal -> ruray hatun_ruray ( ) Block
+
+ParamListOpt -> ParamList
+ParamListOpt -> ''
+
+ParamList -> Param MoreParams
+
+MoreParams -> , Param MoreParams
+MoreParams -> ''
+
+Param -> Type : IDENTIFICADOR_TOKEN
+
+Type -> yupay
+Type -> chiqi
+Type -> chiqap
+Type -> qillqa
+
+TypeOpt -> Type
+TypeOpt -> ''
+
+Block -> { Instrucciones }
+
+Instrucciones -> Instruccion Instrucciones
+Instrucciones -> ''
+
+Instruccion -> DeclaracionVariables
+Instruccion -> PrintStmt
+Instruccion -> Bucle
+Instruccion -> Estructura_If
+Instruccion -> Retorno
+Instruccion -> incrementos ;
+
+DeclaracionVariables -> var ListaIdentificadores Type InicializacionOpt ;
+DeclaracionVariables -> ListaIdentificadores := opciones ;
+DeclaracionVariables -> IDENTIFICADOR_TOKEN := opciones ;
+
+ListaIdentificadores -> IDENTIFICADOR_TOKEN MasIdentificadores
+
+MasIdentificadores -> , IDENTIFICADOR_TOKEN MasIdentificadores
+MasIdentificadores -> ''
+
+InicializacionOpt -> = opciones
+InicializacionOpt -> ''
+
+PrintStmt -> imprimiy ( ArgumentPrint ) ;
+
+ArgumentPrint -> opciones MasArgumentosPrint
+ArgumentPrint -> ''
+
+MasArgumentosPrint -> , opciones MasArgumentosPrint
+MasArgumentosPrint -> ''
+
+opciones -> funcion
+opciones -> comparacion
+opciones -> IDENTIFICADOR_TOKEN
+opciones -> datos
+opciones -> operaciones_matematicas
+opciones -> incrementos
+
+incrementos -> IDENTIFICADOR_TOKEN ++
+incrementos -> IDENTIFICADOR_TOKEN --
+
+operaciones_matematicas -> termino expresion_tail
+
+expresion_tail -> + termino expresion_tail
+expresion_tail -> - termino expresion_tail
+expresion_tail -> ''
+
+termino -> factor termino_tail
+
+termino_tail -> * factor termino_tail
+termino_tail -> / factor termino_tail
+termino_tail -> % factor termino_tail
+termino_tail -> ''
+
+factor -> unidad
+factor -> - unidad
+
+unidad -> valor
+unidad -> ( operaciones_matematicas )
+
+valor -> YUPAY_TOKEN
+valor -> CHIQI_TOKEN
+valor -> CHIQAP_TOKEN
+valor -> QILLQA_TOKEN
+valor -> IDENTIFICADOR_TOKEN
+valor -> funcion
+
+funcion -> IDENTIFICADOR_TOKEN ( argumentosFuncion )
+
+argumentosFuncion -> opciones MasArgumentosFuncion
+argumentosFuncion -> ''
+
+MasArgumentosFuncion -> , opciones MasArgumentosFuncion
+MasArgumentosFuncion -> ''
+
+comparacion -> logical_expression
+
+logical_expression -> mana ( expression )
+logical_expression -> ( expression )
+logical_expression -> expression
+
+expression -> compa expression_conti
+
+expression_conti -> opciones_operador_logico expression
+expression_conti -> ''
+
+compa -> opciones opciones_operador_comparacion opciones
+compa -> opciones opciones_operador_logico opciones
+
+Bucle -> for
+Bucle -> while
+Bucle -> bucle_infinito
+
+for -> para ( LoopInitialization ; opciones ; LoopUpdate ) Block
+
+while -> para ( opciones ) Block
+
+bucle_infinito -> para Block
+
+LoopInitialization -> IDENTIFICADOR_TOKEN := asignacion_bucle
+
+asignacion_bucle -> funcion
+asignacion_bucle -> IDENTIFICADOR_TOKEN
+asignacion_bucle -> datos
+
+LoopUpdate -> operaciones_matematicas
+
+Estructura_If -> sichus ( opciones ) Block Else_opcional
+
+Else_opcional -> mana_sichus argumentosELseIf Block
+Else_opcional -> ''
+
+argumentosELseIf -> ( opciones )
+argumentosELseIf -> ''
+
+Retorno -> kutipay IDENTIFICADOR_TOKEN ;
+Retorno -> kutipay ;
+Retorno -> kutipay datos ;
+Retorno -> pakiy ;
+
+datos -> YUPAY_TOKEN
+datos -> CHIQI_TOKEN
+datos -> CHIQAP_TOKEN
+datos -> QILLQA_TOKEN
+datos -> operaciones_matematicas
+datos -> IDENTIFICADOR_TOKEN
+
+YUPAY_TOKEN -> num
+CHIQI_TOKEN -> num . num
+CHIQAP_TOKEN -> chiqaq
+CHIQAP_TOKEN -> mana_chiqaq
+QILLQA_TOKEN -> texto
+IDENTIFICADOR_TOKEN -> id
+
+OPERADOR_ASIGNACION -> :=
+OPERADOR_LOGICO_UTAQ -> utaq
+OPERADOR_LOGICO_WAN -> wan
+OPERADOR_LOGICO_MANA -> mana
+
+opciones_operador_logico -> wan
+opciones_operador_logico -> utaq
+
+opciones_operador_comparacion -> ==
+opciones_operador_comparacion -> !=
+opciones_operador_comparacion -> <
+opciones_operador_comparacion -> >
+opciones_operador_comparacion -> <=
+opciones_operador_comparacion -> >=
