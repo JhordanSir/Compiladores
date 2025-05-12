@@ -1,176 +1,128 @@
-Program -> DefinitionList Principal
-
-DefinitionList -> FunctionDef DefinitionList
-DefinitionList -> E
-
-FunctionDef -> "ruray" IDENTIFICADOR_TOKEN "(" ParamListOpt ")" TypeOpt Block
-
-Principal -> "ruray" "hatun_ruray" "(" ")" Block
-
+Program -> Principal OptionalFunctionDefinitions
+OptionalFunctionDefinitions -> FunctionDef OptionalFunctionDefinitions
+OptionalFunctionDefinitions -> ''
+Principal -> ruray hatun_ruray ( ) Block
+FunctionDef -> ruray IDENTIFICADOR_TOKEN ( ParamListOpt ) TypeOpt Block
 ParamListOpt -> ParamList
-ParamListOpt -> E
-
-ParamList -> Param MoreParams
-
-MoreParams -> "," Param MoreParams
-MoreParams -> E
-
-Param -> Type ":" IDENTIFICADOR_TOKEN
-
-Type -> "yupay"
-Type -> "chiqi"
-Type -> "chiqap"
-Type -> "qillqa"
-
+ParamListOpt -> ''
+ParamList -> Param ParamTail
+Param -> Type : IDENTIFICADOR_TOKEN
+ParamTail -> , Param ParamTail
+ParamTail -> ''
+Type -> yupay
+Type -> chiqi
+Type -> chiqap
+Type -> qillqa
 TypeOpt -> Type
-TypeOpt -> E
-
-Block -> "{" Instrucciones "}"
-
-Instrucciones -> Instruccion Instrucciones
-Instrucciones -> E
-
+TypeOpt -> ''
+Block -> { InstruccionesOpt }
+InstruccionesOpt -> Instruccion InstruccionesOpt
+InstruccionesOpt -> ''
 Instruccion -> DeclaracionVariables
 Instruccion -> PrintStmt
 Instruccion -> Bucle
 Instruccion -> Estructura_If
 Instruccion -> Retorno
-Instruccion -> incrementos ";"
-
-DeclaracionVariables -> "var" ListaIdentificadores Type InicializacionOpt ";"
-DeclaracionVariables -> ListaIdentificadores ":=" opciones ";"
-DeclaracionVariables -> IDENTIFICADOR_TOKEN ":=" opciones ";"
-
-ListaIdentificadores -> IDENTIFICADOR_TOKEN MasIdentificadores
-
-MasIdentificadores -> "," IDENTIFICADOR_TOKEN MasIdentificadores
-MasIdentificadores -> E
-
-InicializacionOpt -> "=" opciones
-InicializacionOpt -> E
-
-PrintStmt -> "imprimiy" "(" ArgumentPrint ")" ";"
-
-ArgumentPrint -> opciones MasArgumentosPrint
-ArgumentPrint -> E
-
-MasArgumentosPrint -> "," opciones MasArgumentosPrint
-MasArgumentosPrint -> E
-
-opciones -> funcion
-opciones -> comparacion
-opciones -> IDENTIFICADOR_TOKEN
-opciones -> datos
-opciones -> operaciones_matematicas
-opciones -> incrementos
-
-incrementos -> IDENTIFICADOR_TOKEN "++"
-incrementos -> IDENTIFICADOR_TOKEN "--"
-
-operaciones_matematicas -> termino expresion_tail
-
-expresion_tail -> "+" termino expresion_tail
-expresion_tail -> "-" termino expresion_tail
-expresion_tail -> E
-
-termino -> factor termino_tail
-
-termino_tail -> "*" factor termino_tail
-termino_tail -> "/" factor termino_tail
-termino_tail -> "%" factor termino_tail
-termino_tail -> E
-
-factor -> unidad
-factor -> "-" unidad
-
-unidad -> valor
-unidad -> "(" operaciones_matematicas ")"
-
-valor -> YUPAY_TOKEN
-valor -> CHIQI_TOKEN
-valor -> CHIQAP_TOKEN
-valor -> QILLQA_TOKEN
-valor -> IDENTIFICADOR_TOKEN
-valor -> funcion
-
-funcion -> IDENTIFICADOR_TOKEN "(" argumentosFuncion ")"
-
-argumentosFuncion -> opciones MasArgumentosFuncion
-argumentosFuncion -> E
-
-MasArgumentosFuncion -> "," opciones MasArgumentosFuncion
-MasArgumentosFuncion -> E
-
-comparacion -> logical_expression
-
-logical_expression -> "mana" "(" expression ")"
-logical_expression -> "(" expression ")"
-logical_expression -> expression
-
-expression -> compa expression_conti
-
-expression_conti -> opciones_operador_logico expression
-expression_conti -> E
-
-compa -> opciones opciones_operador_comparacion opciones
-compa -> opciones opciones_operador_logico opciones
-
-Bucle -> for
-Bucle -> while
-Bucle -> bucle_infinito
-
-for -> "para" "(" LoopInitialization ";" opciones ";" LoopUpdate ")" Block
-
-while -> "para" "(" opciones ")" Block
-
-bucle_infinito -> "para" Block
-
-LoopInitialization -> IDENTIFICADOR_TOKEN ":=" asignacion_bucle
-
-asignacion_bucle -> funcion
-asignacion_bucle -> IDENTIFICADOR_TOKEN
-asignacion_bucle -> datos
-
-LoopUpdate -> operaciones_matematicas
-
-Estructura_If -> "sichus" "(" opciones ")" Block Else_opcional
-
-Else_opcional -> "mana_sichus" argumentosELseIf Block
-Else_opcional -> E
-
-argumentosELseIf -> "(" opciones ")"
-argumentosELseIf -> E
-
-Retorno -> "kutipay" IDENTIFICADOR_TOKEN ";"
-Retorno -> "kutipay" ";"
-Retorno -> "kutipay" datos ";"
-Retorno -> "pakiy" ";"
-
-datos -> YUPAY_TOKEN
-datos -> CHIQI_TOKEN
-datos -> CHIQAP_TOKEN
-datos -> QILLQA_TOKEN
-datos -> operaciones_matematicas
-datos -> IDENTIFICADOR_TOKEN
-
-YUPAY_TOKEN -> "num"
-CHIQI_TOKEN -> "num" "." "num"
-CHIQAP_TOKEN -> "chiqaq"
-CHIQAP_TOKEN -> "mana_chiqaq"
-QILLQA_TOKEN -> "texto"
-IDENTIFICADOR_TOKEN -> "id"
-
-OPERADOR_ASIGNACION -> ":="
-OPERADOR_LOGICO_UTAQ -> "utaq"
-OPERADOR_LOGICO_WAN -> "wan"
-OPERADOR_LOGICO_MANA -> "mana"
-
-opciones_operador_logico -> "wan"
-opciones_operador_logico -> "utaq"
-
-opciones_operador_comparacion -> "=="
-opciones_operador_comparacion -> "!="
-opciones_operador_comparacion -> "<"
-opciones_operador_comparacion -> ">"
-opciones_operador_comparacion -> "<="
-opciones_operador_comparacion -> ">="
+Instruccion -> IncrementoStmt ;
+DeclaracionVariables -> VarOrId ListaIdentificadoresRest Type InicializacionOpt ;
+VarOrId -> var ListaIdentificadores
+VarOrId -> IDENTIFICADOR_TOKEN SimpleAssignmentRest
+ListaIdentificadoresRest -> , id ListaIdentificadoresRest
+ListaIdentificadoresRest -> ''
+ListaIdentificadores -> id ListaIdentificadoresRest
+SimpleAssignmentRest -> := Opciones
+InicializacionOpt -> = Opciones
+InicializacionOpt -> ''
+PrintStmt -> imprimiy ( ArgumentPrintOpt ) ;
+ArgumentPrintOpt -> Expression
+ArgumentPrintOpt -> ''
+Opciones -> Expression
+IncrementoStmt -> IDENTIFICADOR_TOKEN IncrementoOp
+IncrementoOp -> IncrementoOpPlus
+IncrementoOp -> IncrementoOpMinus
+IncrementoOpPlus -> ++
+IncrementoOpMinus -> --
+Expression -> TermLogico ExpressionConti
+ExpressionConti -> OpcionLogico TermLogico ExpressionConti
+ExpressionConti -> ''
+TermLogico -> TermComparacion TermLogicoConti
+TermLogicoConti -> OpcionComparacion Opciones
+TermLogicoConti -> ''
+TermComparacion -> Factor
+Factor -> Unidad FactorConti
+FactorConti -> MulOp Unidad FactorConti
+FactorConti -> ''
+MulOp -> MulOpPacha
+MulOp -> MulOpRakiy
+MulOp -> MulOpModulo
+MulOp -> MulOpSum
+MulOp -> MulOpRes
+MulOpPacha -> *
+MulOpRakiy -> /
+MulOpModulo -> %
+MulOpSum -> +
+MulOpRes -> -
+Unidad -> Valor
+Unidad -> ( Expression )
+Valor -> YUPAY_TOKEN
+Valor -> CHIQI_TOKEN
+Valor -> CHIQAP_TOKEN
+Valor -> QILLQA_TOKEN
+Valor -> IdentificadorOrFunctionCall
+IdentificadorOrFunctionCall -> IDENTIFICADOR_TOKEN IdentificadorOrFunctionCallPrima
+IdentificadorOrFunctionCallPrima -> ( ArgumentosFuncionOpt )
+IdentificadorOrFunctionCallPrima -> ''
+ArgumentosFuncionOpt -> Expression MasArgumentosFuncion
+ArgumentosFuncionOpt -> ''
+MasArgumentosFuncion -> , Expression MasArgumentosFuncion
+MasArgumentosFuncion -> ''
+Bucle -> ForLoop
+ForLoop -> para ( LoopInitialization ; ExpressionOpt ; LoopUpdateOpt ) Block
+LoopInitialization -> IDENTIFICADOR_TOKEN := AsignacionBucle
+LoopInitialization -> ''
+AsignacionBucle -> IdentificadorOrFunctionCall
+AsignacionBucle -> AsignacionBucleDato
+AsignacionBucleDato -> Dato
+ExpressionOpt -> Expression
+ExpressionOpt -> ''
+LoopUpdateOpt -> IncrementoStmt
+LoopUpdateOpt -> ''
+Estructura_If -> sichus ( Expression ) Block ElseOpcional
+ElseOpcional -> ManaSichusBloque
+ElseOpcional -> ElseOpcionalVacio
+ManaSichusBloque -> mana_sichus ArgumentosElseIf Block ElseOpcional
+ElseOpcionalVacio -> ''
+ArgumentosElseIf -> ( Expression )
+Retorno -> RetornoConValor
+Retorno -> RetornoSinValor
+RetornoConValor -> kutipay Expression ;
+RetornoSinValor -> pakiy ;
+RetornoContenidoOpt -> Expression
+RetornoContenidoOpt -> ''
+Dato -> YUPAY_TOKEN
+Dato -> CHIQI_TOKEN
+Dato -> CHIQAP_TOKEN_CHIQAQ
+Dato -> CHIQAP_TOKEN_MANA_CHIQAQ
+Dato -> QILLQA_TOKEN
+CHIQAP_TOKEN_CHIQAQ -> chiqaq
+CHIQAP_TOKEN_MANA_CHIQAQ -> mana_chiqaq
+YUPAY_TOKEN -> num
+CHIQI_TOKEN -> num.num
+QILLQA_TOKEN -> texto
+IDENTIFICADOR_TOKEN -> id
+OpcionLogico -> OpcionLogicoWan
+OpcionLogico -> OpcionLogicoUtaq
+OpcionLogicoWan -> wan
+OpcionLogicoUtaq -> utaq
+OpcionComparacion -> OpcionComparacionIgual
+OpcionComparacion -> OpcionComparacionNoIgual
+OpcionComparacion -> OpcionComparacionMenor
+OpcionComparacion -> OpcionComparacionMayor
+OpcionComparacion -> OpcionComparacionMenorIgual
+OpcionComparacion -> OpcionComparacionMayorIgual
+OpcionComparacionIgual -> ==
+OpcionComparacionNoIgual -> !=
+OpcionComparacionMenor -> <
+OpcionComparacionMayor -> >
+OpcionComparacionMenorIgual -> <=
+OpcionComparacionMayorIgual -> >=
