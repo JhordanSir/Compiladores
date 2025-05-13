@@ -1,3 +1,0 @@
-ruray hatun_ruray ( ) {
-    imprimiy ( id ) ;
-}

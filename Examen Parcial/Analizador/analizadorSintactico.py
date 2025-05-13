@@ -140,7 +140,7 @@ def exportar_arbol_a_graphviz(raiz, nombre_archivo="arbol.txt"):
 
 tabla = cargar_tabla_desde_csv("E:\\Compiladores\\Examen Parcial\\Gramática\\tablitaTransiciones.csv")
 # Leer entrada desde archivo
-with open("E:\\Compiladores\\Examen Parcial\\inputs\\input.txt", "r", encoding="utf-8") as archivo:
+with open("E:\\Compiladores\\Examen Parcial\\Inputs\\input2.ws", "r", encoding="utf-8") as archivo:
     entrada = archivo.read().strip()
     # Convertir múltiples espacios y saltos de línea en un solo espacio
     entrada = ' '.join(entrada.split())

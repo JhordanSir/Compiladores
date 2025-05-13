@@ -2,5 +2,5 @@ ruray hatun_ruray ( ) {
     var id yupay ;
 }
 ruray id ( yupay : id ) yupay { 
-    kutipay id ; 
+    kutipay id ( ) ; 
 }

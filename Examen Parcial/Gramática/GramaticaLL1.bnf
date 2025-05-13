@@ -22,12 +22,16 @@ Instruccion -> PrintStmt
 Instruccion -> Bucle
 Instruccion -> Estructura_If
 Instruccion -> Retorno
-DeclaracionVariables -> VarOrId ListaIdentificadoresRest Type InicializacionOpt ;
+Instruccion -> DeclaracionVariable
+DeclaracionVariable -> var IDENTIFICADOR_TOKEN Type InicializacionOpt ;
 VarOrId -> var ListaIdentificadores
 VarOrId -> IDENTIFICADOR_TOKEN SimpleAssignmentRest
 ListaIdentificadores -> id ListaIdentificadoresRest
+ListaIdentificadoresRest -> , id ListaIdentificadoresRest
+ListaIdentificadoresRest -> ''
 SimpleAssignmentRest -> := Opciones
 InicializacionOpt -> = Opciones
+InicializacionOpt -> ''
 PrintStmt -> imprimiy ( Expression ) ;
 Opciones -> Expression
 IncrementoStmt -> IDENTIFICADOR_TOKEN IncrementoOp
@@ -58,7 +62,9 @@ Valor -> YUPAY_TOKEN
 Valor -> CHIQI_TOKEN
 Valor -> CHIQAP_TOKEN
 Valor -> QILLQA_TOKEN
-Valor -> IDENTIFICADOR_TOKEN
+Valor -> IDENTIFICADOR_TOKEN ValorPrima
+ValorPrima -> ( ArgumentosFuncionOpt )
+ValorPrima -> ''
 IdentificadorOrFunctionCall -> IDENTIFICADOR_TOKEN IdentificadorOrFunctionCallPrima
 IdentificadorOrFunctionCallPrima -> ( ArgumentosFuncionOpt )
 IdentificadorOrFunctionCallPrima -> ''
