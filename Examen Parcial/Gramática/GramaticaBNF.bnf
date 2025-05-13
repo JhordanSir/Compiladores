@@ -1,0 +1,98 @@
+<Programa> ::= <ListaFunciones> <FuncionPrincipal>
+
+<ListaFunciones> ::= <Funcion> <ListaFunciones> | E
+
+<Funcion> ::= "ruray" <ID> "(" <ParametrosOpt> ")" <TipoRetornoOpt> <Bloque>
+
+<FuncionPrincipal> ::= "ruray" "hatun_ruray" "(" ")" <Bloque>
+
+<ParametrosOpt> ::= <ListaParametros> | E
+<ListaParametros> ::= <Parametro> <ParametrosExtra>
+<ParametrosExtra> ::= "," <Parametro> <ParametrosExtra> | E
+<Parametro> ::= <TipoDato> ":" <ID>
+
+<TipoDato> ::= "yupay" | "chiqi" | "chiqap" | "qillqa"
+<TipoRetornoOpt> ::= <TipoDato> | E
+
+<Bloque> ::= "{" <ListaInstrucciones> "}"
+<ListaInstrucciones> ::= <Instruccion> <ListaInstrucciones> | E
+
+<Instruccion> ::= <Declaracion>
+               | <Impresion>
+               | <EstructuraBucle>
+               | <EstructuraCondicional>
+               | <Retorno>
+               | <Incremento> ";"
+<Declaracion> ::= "var" <ListaIDs> <TipoDato> <InicializacionOpt> ";"
+                | <ID> <DeclaracionResto>
+
+<DeclaracionResto> ::= ":=" <Expresion> ";"
+                     | <IDsExtra> <DeclaracionAsignMultiple>
+
+<DeclaracionAsignMultiple> ::= ":=" <Expresion> ";"
+
+<ListaIDs> ::= <ID> <IDsExtra>
+<IDsExtra> ::= "," <ID> <IDsExtra> | E
+<InicializacionOpt> ::= "=" <Expresion> | E
+
+<Impresion> ::= "imprimiy" "(" <ArgumentoImpresionOpt> ")" ";"
+<ArgumentoImpresionOpt> ::= <Expresion> <MasArgumentosImpresion> | E
+<MasArgumentosImpresion> ::= "," <Expresion> <MasArgumentosImpresion> | E
+
+<Expresion> ::= <ExprLogica>
+
+<ExprLogica> ::= <ExprComparacion> <ExprLogicaResto>
+<ExprLogicaResto> ::= <OperadorLogico> <ExprLogica> | E
+
+<ExprComparacion> ::= <ExprAritmetica> <ExprComparacionResto>
+<ExprComparacionResto> ::= <OperadorComparacion> <ExprAritmetica> | E
+
+<ExprAritmetica> ::= <Termino> <ExprAritmeticaResto>
+<ExprAritmeticaResto> ::= "+" <Termino> <ExprAritmeticaResto>
+                        | "-" <Termino> <ExprAritmeticaResto>
+                        | E
+
+<Termino> ::= <Factor> <TerminoResto>
+<TerminoResto> ::= "*" <Factor> <TerminoResto>
+                 | "/" <Factor> <TerminoResto>
+                 | "%" <Factor> <TerminoResto>
+                 | E
+
+<Factor> ::= "-" <Unidad> | <Unidad>
+<Unidad> ::= <Literal> | <ID> | <LlamadaFuncion> | "(" <ExprAritmetica> ")"
+
+<Literal> ::= <NUM> | <DECIMAL> | <BOOLEANO> | <CADENA>
+
+<Incremento> ::= <ID> <OperadorIncremento>
+<OperadorIncremento> ::= "++" | "--"
+
+<LlamadaFuncion> ::= <ID> "(" <ArgumentosOpt> ")"
+<ArgumentosOpt> ::= <Expresion> <ArgumentosExtra> | E
+<ArgumentosExtra> ::= "," <Expresion> <ArgumentosExtra> | E
+
+<EstructuraBucle> ::= "para" <EstructuraBucleResto>
+
+<EstructuraBucleResto> ::= "(" <InicializacionBucle> ";" <ExprLogica> ";" <ExprAritmetica> ")" <Bloque>
+                         | "(" <ExprLogica> ")" <Bloque>
+                         | <Bloque>
+
+<InicializacionBucle> ::= <ID> ":=" <ValorBucle>
+<ValorBucle> ::= <Literal> | <ID> | <LlamadaFuncion>
+
+<EstructuraCondicional> ::= "sichus" "(" <ExprLogica> ")" <Bloque> <CondicionalElse>
+
+<CondicionalElse> ::= "mana_sichus" <CondElseExpr> <Bloque> | E
+<CondElseExpr> ::= "(" <ExprLogica> ")" | E
+
+<Retorno> ::= "kutipay" <RetornoValor> ";"
+            | "pakiy" ";"
+<RetornoValor> ::= <Expresion> | E
+
+<ID> ::= "id"
+<NUM> ::= "num"
+<DECIMAL> ::= "num.num"
+<BOOLEANO> ::= "chiqaq" | "mana_chiqaq"
+<CADENA> ::= "texto"
+
+<OperadorComparacion> ::= "==" | "!=" | "<" | ">" | "<=" | ">="
+<OperadorLogico> ::= "wan" | "utaq"

@@ -14,27 +14,28 @@ class Nodo:
             hijo.imprimir_preorden()
 
 def imprimir_arbol(nodo, nivel=0, prefijo='', es_ultimo=True):
+    
     espacio = '    '
     rama = '│   '
     rama_esquina = '└── '
     rama_t = '|── '
-
+    
     conector = rama_esquina if es_ultimo else rama_t
-
+    
     if nivel > 0:
         print(f"{prefijo}{conector}{nodo.valor}")
     else:
-        print(f"{espacio}{nodo.valor}")
+        print(f"{espacio}{nodo.valor}") 
 
     nuevo_prefijo = prefijo + (espacio if es_ultimo else rama)
-
+    
     num_hijos = len(nodo.hijos)
     for i, hijo in enumerate(nodo.hijos):
         imprimir_arbol(hijo, nivel + 1, nuevo_prefijo, i == num_hijos - 1)
 
 def cargar_tabla_desde_csv(nombre_archivo):
     tabla = {}
-    with open(nombre_archivo, newline='', encoding='utf-8') as csvfile:
+    with open(nombre_archivo, newline='') as csvfile:
         reader = csv.reader(csvfile)
         encabezado = next(reader)[1:]
 
@@ -50,53 +51,71 @@ def cargar_tabla_desde_csv(nombre_archivo):
 def parser_ll1(input_string, parsing_table):
     tokens = input_string.split() + ['$']
     index = 0
+    
+    raiz = Nodo('Program')
+    stack = [('$', None), ('Program', raiz)] 
 
-    raiz = Nodo('Principal')
-    stack = [('$', None), ('Principal', raiz)]
-
-    print(f"{'Stack':<25}{'Input':<25}{'Action'}")
+    # Aumentar el ancho de las columnas
+    ancho_stack = 50
+    ancho_input = 35
+    ancho_action = 30
+    
+    print("\n" + "="*(ancho_stack + ancho_input + ancho_action + 4))
+    print(f"{'Stack':<{ancho_stack}} | {'Input':<{ancho_input}} | {'Action':<{ancho_action}}")
+    print("-"*(ancho_stack + ancho_input + ancho_action + 4))
 
     while stack:
         top_symbol, top_node = stack.pop()
         current_token = tokens[index]
 
+        # Formatear la pila y la entrada
         stack_str = ' '.join([s[0] for s in stack + [(top_symbol, top_node)]])
         input_str = ' '.join(tokens[index:])
-        print(f"{stack_str:<25}{input_str:<25}", end='')
+        
+        # Ya no truncamos el stack_str
+        input_str = input_str[:ancho_input-2] + '..' if len(input_str) > ancho_input-2 else input_str
+        
+        print(f"{stack_str:<{ancho_stack}} | {input_str:<{ancho_input}} | ", end='')
 
-        if top_symbol == "epsilon":
+        if top_symbol == 'epsilon':
             print("ε")
             continue
         elif top_symbol == current_token:
-            print("terminal")
-            index += 1
+            print("Match")
+            index += 1 
         elif top_symbol in parsing_table:
             rule = parsing_table[top_symbol].get(current_token)
             if rule:
                 production = ' '.join(rule)
-                print(f"{top_symbol} → {production}")
+                print(f"{top_symbol} → {production}") 
 
                 child_nodes = []
                 for symbol in rule:
                     child = Nodo(symbol)
                     top_node.agregar_hijo(child)
-                    if symbol != "''":
+                    
+                    if symbol != 'epsilon':
                         child_nodes.append((symbol, child))
-
+                
                 for symbol_node in reversed(child_nodes):
                     stack.append(symbol_node)
             else:
-                print(f"\n❌ Error: no rule for ({top_symbol}, {current_token})")
+                print(f"\n❌ Error: No hay regla para ({top_symbol}, {current_token})")
+                print("="*80)
                 return None
         else:
-            print(f"\n❌ Error: unexpected symbol '{top_symbol}'")
+            print(f"\n❌ Error: Símbolo inesperado '{top_symbol}'")
+            print("="*80)
             return None
 
         if top_symbol == '$' and current_token == '$':
-            print(f"{'$':<25}{'$':<25}ACCEPT")
-            return raiz
+            print("-"*80)
+            print(f"{'$':<30} | {'$':<30} | ACEPTADO")
+            print("="*80)
+            return raiz 
 
     print("\n❌ Entrada incompleta o mal formada")
+    print("="*80)
     return None
 
 def generar_graphviz(nodo, archivo, contador=[0], conexiones=[]):
@@ -119,21 +138,24 @@ def exportar_arbol_a_graphviz(raiz, nombre_archivo="arbol.txt"):
             archivo.write(f"  node{origen} -> node{destino};\n")
         archivo.write("}\n")
 
-tabla = cargar_tabla_desde_csv("d:\\Compiladores\\Examen Parcial\\Tablas\\tablaTransiciones.csv")
-
-entrada = " ruray hatun_ruray ( ) { } "  # No acepta más cosas que esto, ya que mis compañeritos solo quieren jugar minecraft y mimir. Asu, profe jalelos. Toda la vida carreados.
+tabla = cargar_tabla_desde_csv("E:\\Compiladores\\Examen Parcial\\Gramática\\tablitaTransiciones.csv")
+# Leer entrada desde archivo
+with open("E:\\Compiladores\\Examen Parcial\\inputs\\input.txt", "r", encoding="utf-8") as archivo:
+    entrada = archivo.read().strip()
+    # Convertir múltiples espacios y saltos de línea en un solo espacio
+    entrada = ' '.join(entrada.split())
 
 arbol = parser_ll1(entrada, tabla)
 
 if arbol:
     print("\n✅ Entrada aceptada")
-
+    
     print("\nÁrbol sintáctico en preorder:")
     arbol.imprimir_preorden()
-
+    
     print("\n\nEstructura del árbol sintáctico:")
     imprimir_arbol(arbol)
 
-    exportar_arbol_a_graphviz(arbol, "arbol2.txt")
+    exportar_arbol_a_graphviz(arbol, "E:\\Compiladores\\Examen Parcial\\Salida Graphviz\\arbol.txt")
 else:
     print("\n❌ Entrada rechazada")

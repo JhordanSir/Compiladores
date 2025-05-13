@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 //import arbolText from '../../../arbol.txt?raw';
-import arbolText from '../../../../arbol2.txt?raw';
+import arbolText from 'E:\\Compiladores\\Examen Parcial\\Salida Graphviz\\arbol.txt?raw';
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
