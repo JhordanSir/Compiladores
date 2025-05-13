@@ -34,40 +34,41 @@ InicializacionOpt -> = Opciones
 InicializacionOpt -> ''
 PrintStmt -> imprimiy ( Expression ) ;
 Opciones -> Expression
-IncrementoStmt -> IDENTIFICADOR_TOKEN IncrementoOp
+IncrementoStmt -> IDENTIFICADOR_TOKEN Incremento
+Incremento -> IncrementoOpPlus
+Incremento -> IncrementoOpMinus
 IncrementoOp -> IncrementoOpPlus
-IncrementoStmt -> IncrementoOpMinus
+IncrementoOp -> IncrementoOpMinus
 IncrementoOpPlus -> ++
 IncrementoOpMinus -> --
-Expression -> TermLogico
+Expression -> TermLogico ExpressionPrima
+ExpressionPrima -> OpcionLogico TermLogico ExpressionPrima
+ExpressionPrima -> ''
 TermLogico -> TermComparacion TermLogicoConti
-TermLogicoConti -> OpcionComparacion Opciones
+TermLogicoConti -> OpcionComparacion TermComparacion TermLogicoConti
 TermLogicoConti -> ''
-TermComparacion -> Factor
+TermComparacion -> Factor TermComparacionConti
+TermComparacionConti -> ''
 Factor -> Unidad FactorConti
+FactorConti -> MulOp Unidad FactorConti
 FactorConti -> ''
 MulOp -> MulOpPacha
 MulOp -> MulOpRakiy
 MulOp -> MulOpModulo
 MulOp -> MulOpSum
 MulOp -> MulOpRes
+MulOp -> MulOpPow
+MulOpPow -> **
 MulOpPacha -> *
 MulOpRakiy -> /
 MulOpModulo -> %
 MulOpSum -> +
 MulOpRes -> -
-Unidad -> Valor
 Unidad -> ( Expression )
-Valor -> YUPAY_TOKEN
-Valor -> CHIQI_TOKEN
-Valor -> CHIQAP_TOKEN
-Valor -> QILLQA_TOKEN
-Valor -> IDENTIFICADOR_TOKEN ValorPrima
-ValorPrima -> ( ArgumentosFuncionOpt )
-ValorPrima -> ''
-IdentificadorOrFunctionCall -> IDENTIFICADOR_TOKEN IdentificadorOrFunctionCallPrima
-IdentificadorOrFunctionCallPrima -> ( ArgumentosFuncionOpt )
-IdentificadorOrFunctionCallPrima -> ''
+Unidad -> ValorUnitario
+ValorUnitario -> IDENTIFICADOR_TOKEN ValorUnitarioRest
+ValorUnitarioRest -> ( ArgumentosFuncionOpt )
+ValorUnitarioRest -> ''
 ArgumentosFuncionOpt -> Expression MasArgumentosFuncion
 ArgumentosFuncionOpt -> ''
 MasArgumentosFuncion -> , Expression MasArgumentosFuncion
@@ -100,6 +101,7 @@ Dato -> CHIQI_TOKEN
 Dato -> CHIQAP_TOKEN_CHIQAQ
 Dato -> CHIQAP_TOKEN_MANA_CHIQAQ
 Dato -> QILLQA_TOKEN
+Dato -> IDENTIFICADOR_TOKEN
 CHIQAP_TOKEN_CHIQAQ -> chiqaq
 CHIQAP_TOKEN_MANA_CHIQAQ -> mana_chiqaq
 YUPAY_TOKEN -> num
