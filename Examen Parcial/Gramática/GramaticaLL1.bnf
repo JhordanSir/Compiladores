@@ -57,8 +57,6 @@ MulOp -> MulOpRakiy
 MulOp -> MulOpModulo
 MulOp -> MulOpSum
 MulOp -> MulOpRes
-MulOp -> MulOpPow
-MulOpPow -> **
 MulOpPacha -> *
 MulOpRakiy -> /
 MulOpModulo -> %
@@ -124,3 +122,4 @@ OpcionComparacionMenor -> <
 OpcionComparacionMayor -> >
 OpcionComparacionMenorIgual -> <=
 OpcionComparacionMayorIgual -> >=
+

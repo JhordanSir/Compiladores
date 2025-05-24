@@ -72,7 +72,6 @@ def parser_ll1(input_string, parsing_table):
         stack_str = ' '.join([s[0] for s in stack + [(top_symbol, top_node)]])
         input_str = ' '.join(tokens[index:])
         
-        # Ya no truncamos el stack_str
         input_str = input_str[:ancho_input-2] + '..' if len(input_str) > ancho_input-2 else input_str
         
         print(f"{stack_str:<{ancho_stack}} | {input_str:<{ancho_input}} | ", end='')
@@ -140,7 +139,7 @@ def exportar_arbol_a_graphviz(raiz, nombre_archivo="arbol.txt"):
 
 tabla = cargar_tabla_desde_csv("E:\\Compiladores\\Examen Parcial\\Gramática\\tablitaTransiciones.csv")
 # Leer entrada desde archivo
-with open("E:\\Compiladores\\Examen Parcial\\Inputs\\input2.ws", "r", encoding="utf-8") as archivo:
+with open("E:\\Compiladores\\Examen Parcial\\Inputs\\input3.ws", "r", encoding="utf-8") as archivo:
     entrada = archivo.read().strip()
     # Convertir múltiples espacios y saltos de línea en un solo espacio
     entrada = ' '.join(entrada.split())
