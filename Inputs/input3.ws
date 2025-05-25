@@ -1,11 +1,5 @@
-ruray factorial(yupay: yupay) kutipay yupay { 
-    sichus yupay == 0 {
-        kutipay 1
-    } mana {
-        kutipay yupay * factorial(yupay - 1)
-    }
-}
-
+# tipos de variables
 ruray hatun_ruray() {
-    imprimiy(factorial(5))
+    var entero yupay = id ( );
+    
 }

@@ -1,11 +1,11 @@
 import csv
 import ply.lex as lex
 from AnalizadorLexico import analyze_file
-
 class Nodo:
-    def __init__(self, valor):
+    def __init__(self, valor, token_original=None):  
         self.valor = valor
         self.hijos = []
+        self.token_original = token_original 
 
     def agregar_hijo(self, hijo):
         self.hijos.append(hijo)
@@ -129,7 +129,7 @@ def parser_ll1(token_objects_list, parsing_table, start_symbol='Program'):
         current_token_object = tokens_for_parsing[index]
         current_token_type_from_lexer = current_token_object.type
 
-        stack_display_list = [s[0] for s in reversed(stack + [(top_grammar_symbol, current_node_in_tree)])] # Mostrar el que se acaba de sacar
+        stack_display_list = [s[0] for s in reversed(stack + [(top_grammar_symbol, current_node_in_tree)])]
         stack_str_print = ' '.join(stack_display_list)
         
         input_token_display = f"{current_token_type_from_lexer} ('{current_token_object.value}', L{current_token_object.lineno})"
@@ -141,13 +141,15 @@ def parser_ll1(token_objects_list, parsing_table, start_symbol='Program'):
             print("ε (Nodo Epsilon en Árbol)")
             
             continue
-        elif top_grammar_symbol == current_token_type_from_lexer:
+        elif top_grammar_symbol == current_token_type_from_lexer: 
             print(f"Match: {current_token_type_from_lexer}")
-            
+            if current_node_in_tree: 
+                current_node_in_tree.token_original = current_token_object
+
             if top_grammar_symbol in TOKENS_CON_LEXEMA:
-                lexeme_node = Nodo(str(current_token_object.value))
+                lexeme_node = Nodo(str(current_token_object.value), current_token_object) 
                 if current_node_in_tree:
-                     current_node_in_tree.agregar_hijo(lexeme_node)
+                    current_node_in_tree.agregar_hijo(lexeme_node)
             index += 1
         elif top_grammar_symbol in parsing_table:
             if current_token_type_from_lexer not in parsing_table[top_grammar_symbol]:
@@ -248,7 +250,7 @@ def exportar_arbol_a_graphviz(raiz, nombre_archivo="arbol_parseo.dot"):
 
 if __name__ == '__main__':
     tabla_csv_path = "E:\\Compiladores\\Gramática\\tablitaTransiciones.csv"
-    archivo_entrada_path = "E:\\Compiladores\\Inputs\\input1.ws"
+    archivo_entrada_path = "E:\\Compiladores\\Inputs\\input3.ws"
 
     print(f"--- Cargando tabla de parsing desde: {tabla_csv_path} ---")
     tabla_parsing = cargar_tabla_desde_csv(tabla_csv_path)

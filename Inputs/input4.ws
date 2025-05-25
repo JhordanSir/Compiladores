@@ -1,5 +1,7 @@
 # hola
 
+var id yupay;
+
 ruray id ( yupay : id , yupay : id ) yupay { 
     kutipay num ; 
 } 
