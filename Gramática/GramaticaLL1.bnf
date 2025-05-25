@@ -1,0 +1,115 @@
+Program -> DefinitionList
+DefinitionList -> PALABRA_RESERVADA_RURAY OneDefinition DefinitionList
+DefinitionList -> ''
+OneDefinition -> IDENTIFICADOR_TOKEN PARENTESIS_ABRE ParamListOpt PARENTESIS_CIERRA TypeOpt Block
+OneDefinition -> HATUN_RURAY_TOKEN PARENTESIS_ABRE PARENTESIS_CIERRA Block
+ParamListOpt -> ParamList
+ParamListOpt -> ''
+ParamList -> Param ParamTail
+Param -> Type DOS_PUNTOS_TOKEN IDENTIFICADOR_TOKEN
+ParamTail -> COMA_TOKEN Param ParamTail
+ParamTail -> ''
+Type -> TIPO_YUPAY
+Type -> TIPO_CHIQI
+Type -> TIPO_CHIQAP
+Type -> TIPO_QILLQA
+TypeOpt -> Type
+TypeOpt -> ''
+Block -> LLAVE_ABRE InstruccionesOpt LLAVE_CIERRA
+InstruccionesOpt -> Instruccion InstruccionesOpt
+InstruccionesOpt -> ''
+Instruccion -> PrintStmt
+Instruccion -> Bucle
+Instruccion -> Estructura_If
+Instruccion -> Retorno
+Instruccion -> DeclaracionVariable
+DeclaracionVariable -> PALABRA_RESERVADA_VAR IDENTIFICADOR_TOKEN Type InicializacionOpt PUNTO_Y_COMA_TOKEN
+VarOrId -> PALABRA_RESERVADA_VAR ListaIdentificadores
+VarOrId -> IDENTIFICADOR_TOKEN SimpleAssignmentRest
+ListaIdentificadores -> IDENTIFICADOR_TOKEN ListaIdentificadoresRest
+ListaIdentificadoresRest -> COMA_TOKEN IDENTIFICADOR_TOKEN ListaIdentificadoresRest
+ListaIdentificadoresRest -> ''
+SimpleAssignmentRest -> DOS_PUNTOS_TOKEN OPERADOR_ASIGNACION Opciones
+InicializacionOpt -> OPERADOR_ASIGNACION Opciones
+InicializacionOpt -> ''
+PrintStmt -> PALABRA_RESERVADA_IMPRIMIY PARENTESIS_ABRE Expression PARENTESIS_CIERRA PUNTO_Y_COMA_TOKEN
+Opciones -> Expression
+IncrementoStmt -> IDENTIFICADOR_TOKEN Incremento
+Incremento -> IncrementoOpPlus
+Incremento -> IncrementoOpMinus
+IncrementoOp -> IncrementoOpPlus
+IncrementoOp -> IncrementoOpMinus
+IncrementoOpPlus -> OPERADOR_MAS OPERADOR_MAS
+IncrementoOpMinus -> OPERADOR_MENOS OPERADOR_MENOS
+Expression -> TermLogico ExpressionPrima
+ExpressionPrima -> OpcionLogico TermLogico ExpressionPrima
+ExpressionPrima -> ''
+TermLogico -> TermComparacion TermLogicoConti
+TermLogicoConti -> OpcionComparacion TermComparacion TermLogicoConti
+TermLogicoConti -> ''
+TermComparacion -> Factor TermComparacionConti
+TermComparacionConti -> ''
+Factor -> Unidad FactorConti
+FactorConti -> MulOp Unidad FactorConti
+FactorConti -> ''
+MulOp -> MulOpPacha
+MulOp -> MulOpRakiy
+MulOp -> MulOpModulo
+MulOp -> MulOpSum
+MulOp -> MulOpRes
+MulOpPacha -> OPERADOR_PACHA
+MulOpRakiy -> OPERADOR_RAKI
+MulOpModulo -> OPERADOR_MODULO
+MulOpSum -> OPERADOR_MAS
+MulOpRes -> OPERADOR_MENOS
+Unidad -> PARENTESIS_ABRE Expression PARENTESIS_CIERRA
+Unidad -> ValorUnitario
+Unidad -> Dato
+ValorUnitario -> IDENTIFICADOR_TOKEN ValorUnitarioRest
+ValorUnitarioRest -> PARENTESIS_ABRE ArgumentosFuncionOpt PARENTESIS_CIERRA
+ValorUnitarioRest -> ''
+ArgumentosFuncionOpt -> Expression MasArgumentosFuncion
+ArgumentosFuncionOpt -> ''
+MasArgumentosFuncion -> COMA_TOKEN Expression MasArgumentosFuncion
+MasArgumentosFuncion -> ''
+Bucle -> ForLoop
+ForLoop -> PALABRA_RESERVADA_PARA PARENTESIS_ABRE LoopInitialization PUNTO_Y_COMA_TOKEN ExpressionOpt PUNTO_Y_COMA_TOKEN LoopUpdateOpt PARENTESIS_CIERRA Block
+LoopInitialization -> IDENTIFICADOR_TOKEN DOS_PUNTOS_TOKEN OPERADOR_ASIGNACION AsignacionBucle
+LoopInitialization -> ''
+AsignacionBucle -> ValorUnitario
+AsignacionBucle -> AsignacionBucleDato
+AsignacionBucleDato -> Dato
+ExpressionOpt -> Expression
+ExpressionOpt -> ''
+LoopUpdateOpt -> IncrementoStmt
+LoopUpdateOpt -> ''
+Estructura_If -> PALABRA_RESERVADA_SICHUS PARENTESIS_ABRE Expression PARENTESIS_CIERRA Block ElseOpcional
+ElseOpcional -> ManaSichusBloque
+ElseOpcional -> ElseOpcionalVacio
+ManaSichusBloque -> PALABRA_RESERVADA_MANA_SICHUS ArgumentosElseIf Block ElseOpcional
+ElseOpcionalVacio -> ''
+ArgumentosElseIf -> PARENTESIS_ABRE Expression PARENTESIS_CIERRA
+Retorno -> RetornoConValor
+Retorno -> RetornoSinValor
+RetornoConValor -> PALABRA_RESERVADA_KUTIPAY Expression PUNTO_Y_COMA_TOKEN
+RetornoSinValor -> PALABRA_RESERVADA_PAKIY PUNTO_Y_COMA_TOKEN
+RetornoContenidoOpt -> Expression
+RetornoContenidoOpt -> ''
+Dato -> YUPAY_TOKEN
+Dato -> CHIQI_KAY_TOKEN
+Dato -> CHIQAP_TOKEN_CHIQAQ
+Dato -> CHIQAP_TOKEN_MANA_CHIQAQ
+Dato -> QILLQA_TOKEN
+OpcionLogico -> OpcionLogicoWan
+OpcionLogico -> OpcionLogicoUtaq
+OpcionLogicoWan -> OPERADOR_LOGICO_WAN
+OpcionLogicoUtaq -> OPERADOR_LOGICO_UTAQ
+OpcionComparacion -> OpcionComparacionIgual
+OpcionComparacion -> OpcionComparacionNoIgual
+OpcionComparacion -> OpcionComparacionMenor
+OpcionComparacion -> OpcionComparacionMayor
+OpcionComparacion -> OpcionComparacionMenorIgual
+OpcionComparacion -> OpcionComparacionMayorIgual
+OpcionComparacionIgual -> OPERADOR_IGUALDAD
+OpcionComparacionNoIgual -> OPERADOR_MANA_IGUAL
+OpcionComparacionMenor -> OPERADOR_MENOR

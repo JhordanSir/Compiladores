@@ -1,7 +1,0 @@
-sichus (wata > 18) {
-    imprimiy("Eres mayor de edad");
-} mana sichus (wata == 18) {
-    imprimiy("Eres justo mayor de edad");
-} mana {
-    imprimiy("Eres menor de edad");
-}
