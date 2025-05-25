@@ -1,3 +1,5 @@
+# prueba en general
+
 # hola
 
 var id yupay;
@@ -19,6 +21,6 @@ ruray id2 ( yupay : id ) qillqa {
 
 ruray hatun_ruray ( ) {
     var id yupay;
-    imprimiy ( adsfasdfads ( num , num ) * fdasfasfs ) ; 
+    imprimiy ( id2 ( num , num ) * fdasfasfs ) ; 
     imprimiy ( "texto" ) ; 
 } 

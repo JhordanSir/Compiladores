@@ -1,7 +1,8 @@
+# prueba de bucles anidados
 ruray hatun_ruray() {
-    para fila := 1; fila <= 3; fila++ { 
-        para columna := 'A'; columna <= 'C'; columna++ {
-            imprimiy("Fila:", fila, ", Columna:", columna); 
-        }
-    }
+    para ( sadfsadfsa := id ; id < id ; id ++ ) { 
+        para ( id := id ; id < id ; id ++ ) { 
+            imprimiy ( "Pavo de MIguel" ) ; 
+        } 
+    } 
 }

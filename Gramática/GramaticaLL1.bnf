@@ -1,7 +1,7 @@
 Program -> DefinitionList
 
 DefinitionList -> PALABRA_RESERVADA_RURAY OneDefinition DefinitionList
-DefinitionList -> PALABRA_RESERVADA_VAR IDENTIFICADOR_TOKEN DeclaracionSufijo DefinitionList
+DefinitionList -> PALABRA_RESERVADA_VAR IDENTIFICADOR_TOKEN Type InicializacionOpt PUNTO_Y_COMA_TOKEN DefinitionList
 DefinitionList -> ''
 
 OneDefinition -> IDENTIFICADOR_TOKEN PARENTESIS_ABRE ParamListOpt PARENTESIS_CIERRA TypeOpt Block
@@ -17,28 +17,14 @@ Instruccion -> Bucle
 Instruccion -> Estructura_If
 Instruccion -> Retorno
 Instruccion -> DeclaracionVariable
+Instruccion -> AssignmentStmt
 
-DeclaracionVariable -> PALABRA_RESERVADA_VAR IDENTIFICADOR_TOKEN DeclaracionSufijo
+DeclaracionVariable -> PALABRA_RESERVADA_VAR IDENTIFICADOR_TOKEN Type InicializacionOpt PUNTO_Y_COMA_TOKEN
 
-DeclaracionSufijo -> TIPO_YUPAY InicializacionEspecificaYupayOpt PUNTO_Y_COMA_TOKEN
-DeclaracionSufijo -> TIPO_CHIQI InicializacionEspecificaChiqiOpt PUNTO_Y_COMA_TOKEN
-DeclaracionSufijo -> TIPO_QILLQA InicializacionEspecificaQillqaOpt PUNTO_Y_COMA_TOKEN
-DeclaracionSufijo -> TIPO_CHIQAP InicializacionEspecificaChiqapOpt PUNTO_Y_COMA_TOKEN
+AssignmentStmt -> IDENTIFICADOR_TOKEN OPERADOR_ASIGNACION Expression PUNTO_Y_COMA_TOKEN
 
-InicializacionEspecificaYupayOpt -> OPERADOR_ASIGNACION LiteralYupay
-InicializacionEspecificaYupayOpt -> ''
-InicializacionEspecificaChiqiOpt -> OPERADOR_ASIGNACION LiteralChiqi
-InicializacionEspecificaChiqiOpt -> ''
-InicializacionEspecificaQillqaOpt -> OPERADOR_ASIGNACION LiteralQillqa
-InicializacionEspecificaQillqaOpt -> ''
-InicializacionEspecificaChiqapOpt -> OPERADOR_ASIGNACION LiteralChiqap
-InicializacionEspecificaChiqapOpt -> ''
-
-LiteralYupay -> YUPAY_TOKEN
-LiteralChiqi -> CHIQI_KAY_TOKEN
-LiteralQillqa -> QILLQA_TOKEN
-LiteralChiqap -> CHIQAP_TOKEN_CHIQAQ
-LiteralChiqap -> CHIQAP_TOKEN_MANA_CHIQAQ
+InicializacionOpt -> OPERADOR_ASIGNACION Expression
+InicializacionOpt -> ''
 
 ParamListOpt -> ParamList
 ParamListOpt -> ''

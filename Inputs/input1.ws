@@ -1,3 +1,4 @@
+# prueba de variables globales y locales
 var global yupay;
 
 ruray id ( )  { 

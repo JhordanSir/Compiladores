@@ -347,7 +347,7 @@ def debug_print_ast_structure(node, indent=0):
 
 if __name__ == "__main__":
     tabla_csv_path = "E:\\Compiladores\\Gramática\\tablitaTransiciones.csv"
-    archivo_entrada_path = "E:\\Compiladores\\Inputs\\input1.ws"
+    archivo_entrada_path = "E:\\Compiladores\\Inputs\\input3.ws"
     
     codigo_a_parsear = None
     try:

@@ -247,7 +247,6 @@ def exportar_arbol_a_graphviz(raiz, nombre_archivo="arbol_parseo.dot"):
         archivo.write("}\n")
     print(f"Árbol exportado a '{nombre_archivo}'. Puedes visualizarlo con Graphviz (ej: dot -Tpng {nombre_archivo} -o arbol.png)")
 
-
 if __name__ == '__main__':
     tabla_csv_path = "E:\\Compiladores\\Gramática\\tablitaTransiciones.csv"
     archivo_entrada_path = "E:\\Compiladores\\Inputs\\input3.ws"
