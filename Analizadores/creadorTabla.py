@@ -1,8 +1,8 @@
 import csv
 from collections import defaultdict
 
-EPSILON_SYMBOL = "''" # Cómo representas epsilon en tu gramática de entrada
-EPSILON_OUTPUT_STRING = "epsilon" # Cómo quieres que se vea epsilon en el CSV de salida
+EPSILON_SYMBOL = "''"
+EPSILON_OUTPUT_STRING = "epsilon"
 EOF_SYMBOL = "$"
 
 def parse_grammar(grammar_lines):
@@ -10,7 +10,7 @@ def parse_grammar(grammar_lines):
     non_terminals = set()
     terminals = set()
     start_symbol = None
-    all_symbols_in_order = [] # Para mantener el orden de los no terminales
+    all_symbols_in_order = [] 
 
     for line in grammar_lines:
         line = line.strip()
@@ -21,7 +21,7 @@ def parse_grammar(grammar_lines):
 
         lhs, rhs_str = line.split("->", 1)
         lhs = lhs.strip()
-        if lhs not in non_terminals: # Para mantener el orden de aparición
+        if lhs not in non_terminals: 
             all_symbols_in_order.append(lhs)
         non_terminals.add(lhs)
 
@@ -66,7 +66,7 @@ def calculate_first_sets(grammar, non_terminals, terminals, epsilon_symbol):
 
                 can_derive_epsilon_so_far = True
                 for symbol_idx, symbol in enumerate(production):
-                    current_symbol_first = set(first[symbol]) # Copia para no modificarla si es la misma
+                    current_symbol_first = set(first[symbol])
                     
                     added_new = False
                     for f_sym in current_symbol_first:
@@ -117,21 +117,18 @@ def calculate_follow_sets(grammar, non_terminals, terminals, start_symbol, first
                                     can_beta_be_epsilon = False
                                     break
                             
-                            for f_s_beta in first_of_beta: # No añadir epsilon de first_of_beta
+                            for f_s_beta in first_of_beta: 
                                 if f_s_beta not in follow[symbol_B]:
                                     follow[symbol_B].add(f_s_beta)
-                                    # changed = True # El cambio se detecta al final
 
-                            if can_beta_be_epsilon or not beta: # si beta puede ser epsilon o beta es vacía
+                            if can_beta_be_epsilon or not beta: 
                                 for f_s_A in follow[nt_A]:
                                     if f_s_A not in follow[symbol_B]:
                                         follow[symbol_B].add(f_s_A)
-                                        # changed = True # El cambio se detecta al final
-                        else: # beta es vacía, A -> alpha B
+                        else:
                             for f_s_A in follow[nt_A]:
                                 if f_s_A not in follow[symbol_B]:
                                     follow[symbol_B].add(f_s_A)
-                                    # changed = True # El cambio se detecta al final
                         
                         if len(follow[symbol_B]) > original_follow_B_size:
                             changed = True
@@ -168,17 +165,12 @@ def create_ll1_parsing_table(grammar, non_terminals, first_sets, follow_sets, ep
                                         f"Nuevo: {nt_A} -> {' '.join(production_alpha)}")
                         print(conflict_msg)
                         conflicts.append(conflict_msg)
-                        # Se queda con la primera regla encontrada para el CSV, o marca CONFLICTO
-                        # Para parecerse a tu tabla, nos quedamos con la primera.
-                        # Si quieres marcarlo, podrías hacer: parsing_table[nt_A][terminal_a] = ["CONFLICT"]
                     else:
                         parsing_table[nt_A][terminal_a] = production_alpha
 
             if epsilon_symbol in first_of_alpha:
                 for terminal_b in follow_sets[nt_A]:
                     if terminal_b in parsing_table[nt_A]:
-                        # Si ya hay una regla (no por epsilon), es un conflicto.
-                        # Si la regla existente también era por epsilon, y es diferente, también conflicto.
                         if parsing_table[nt_A][terminal_b] != production_alpha:
                             conflict_msg = (f"Conflicto LL(1) (epsilon) en M[{nt_A}, {terminal_b}]: "
                                             f"Existente: {nt_A} -> {' '.join(parsing_table[nt_A][terminal_b])}, "
@@ -190,12 +182,6 @@ def create_ll1_parsing_table(grammar, non_terminals, first_sets, follow_sets, ep
     return parsing_table, conflicts
 
 def save_table_to_csv_custom_format(parsing_table, ordered_non_terminals, all_terminals_with_eof, output_filename):
-    # Obtener todos los terminales únicos de la cabecera de tu tabla de ejemplo si es posible
-    # o usar los calculados y ordenarlos.
-    # Para este ejemplo, usaremos los calculados y ordenados alfabéticamente.
-    # Si tienes una lista fija de columnas de tu tabla original, puedes usarla aquí.
-    
-    # Ordenar terminales alfabéticamente, con $ al final si está presente
     sorted_terminals = sorted(list(t for t in all_terminals_with_eof if t != EOF_SYMBOL))
     if EOF_SYMBOL in all_terminals_with_eof:
         sorted_terminals.append(EOF_SYMBOL)
@@ -203,10 +189,10 @@ def save_table_to_csv_custom_format(parsing_table, ordered_non_terminals, all_te
     with open(output_filename, 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
         
-        header = [''] + sorted_terminals # Primera celda de cabecera vacía
+        header = [''] + sorted_terminals 
         writer.writerow(header)
         
-        for nt in ordered_non_terminals: # Usar el orden de aparición de los no terminales
+        for nt in ordered_non_terminals: 
             row = [nt]
             for t in sorted_terminals:
                 production_symbols = parsing_table[nt].get(t)
@@ -214,20 +200,20 @@ def save_table_to_csv_custom_format(parsing_table, ordered_non_terminals, all_te
                     if production_symbols == [EPSILON_SYMBOL]:
                         row.append(EPSILON_OUTPUT_STRING)
                     else:
-                        # Si hay un conflicto y guardaste ["CONFLICT"], lo escribes
+                       
                         if production_symbols == ["CONFLICT"]:
                              row.append("CONFLICT")
                         else:
                              row.append(' '.join(production_symbols))
                 else:
-                    row.append('') # Celda vacía
+                    row.append('')
             writer.writerow(row)
     print(f"Tabla de parsing LL(1) (formato custom) guardada en {output_filename}")
 
 
 def main():
     grammar_filepath = "E:\\Compiladores\\Gramática\\GramaticaLL1.bnf" 
-    output_csv_filepath = "E:\\Compiladores\\Gramática\\tablitaTransiciones.csv" # Nuevo nombre para no sobrescribir
+    output_csv_filepath = "E:\\Compiladores\\Gramática\\tablitaTransiciones.csv" 
 
     try:
         with open(grammar_filepath, 'r', encoding='utf-8') as f:
@@ -246,14 +232,11 @@ def main():
     for nt in ordered_non_terminals:
         prods = grammar[nt]
         print(f"  {nt} -> {prods}")
-    # print(f"No Terminales: {non_terminals}")
-    # print(f"Terminales: {terminals}")
-    # print(f"Símbolo Inicial: {start_symbol}\n")
 
     first_sets = calculate_first_sets(grammar, non_terminals, terminals, EPSILON_SYMBOL)
     print("\n--- Conjuntos FIRST ---")
     for symbol in list(non_terminals) + list(terminals) + [EPSILON_SYMBOL]:
-        if symbol in first_sets: # Solo imprimir si existe
+        if symbol in first_sets:
              print(f"  FIRST({symbol}) = {first_sets[symbol]}")
     
 

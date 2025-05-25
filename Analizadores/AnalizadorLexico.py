@@ -5,7 +5,6 @@ tokens = [
     'YUPAY_TOKEN',
     'CHIQI_KAY_TOKEN',
     'QILLQA_TOKEN',
-    # 'CHIQAP_TOKEN', # Ya no es necesario si usas los específicos de abajo
     'IDENTIFICADOR_TOKEN',
     'OPERADOR_MAS',
     'OPERADOR_MENOS',
@@ -36,26 +35,24 @@ tokens = [
     'COMENTARIO_TOKEN_BLOQUE_ABRE',
     'COMENTARIO_TOKEN_BLOQUE_CIERRA',
     'PALABRA_RESERVADA_SICHUS',
-    'PALABRA_RESERVADA_MANA_SICHUS', # Para "mana_sichus"
+    'PALABRA_RESERVADA_MANA_SICHUS', 
     'PALABRA_RESERVADA_MANA',
     'PALABRA_RESERVADA_PARA',
     'PALABRA_RESERVADA_RURAY',
     'PALABRA_RESERVADA_KUTIPAY',
     'PALABRA_RESERVADA_IMPRIMIY',
     'PALABRA_RESERVADA_AYLLU',
-    'PALABRA_RESERVADA_VAR',         # Para "var"
+    'PALABRA_RESERVADA_VAR',        
     'PALABRA_RESERVADA_TAKYAQ',
     'PALABRA_RESERVADA_UYWA',
     'PALABRA_RESERVADA_UYA',
     'HATUN_RURAY_TOKEN',
 
-    # Tokens para tipos de datos
     'TIPO_YUPAY',
     'TIPO_CHIQI',
     'TIPO_CHIQAP',
     'TIPO_QILLQA',
 
-    # Tokens para literales booleanos
     'CHIQAP_TOKEN_CHIQAQ',
     'CHIQAP_TOKEN_MANA_CHIQAQ'
 ]
@@ -69,7 +66,7 @@ reserved_words = {
     'kutipay': 'PALABRA_RESERVADA_KUTIPAY',
     'imprimiy': 'PALABRA_RESERVADA_IMPRIMIY',
     'ayllu': 'PALABRA_RESERVADA_AYLLU',
-    'var': 'PALABRA_RESERVADA_VAR',  # CORREGIDO: para que coincida con "var"
+    'var': 'PALABRA_RESERVADA_VAR', 
     'takyaq': 'PALABRA_RESERVADA_TAKYAQ',
     'uywa': 'PALABRA_RESERVADA_UYWA',
     'uya': 'PALABRA_RESERVADA_UYA',
@@ -77,13 +74,11 @@ reserved_words = {
     'utaq': 'OPERADOR_LOGICO_UTAQ',
     'pakiy': 'PALABRA_RESERVADA_PAKIY',
 
-    # Palabras clave para tipos de datos
     'yupay': 'TIPO_YUPAY',
     'chiqi': 'TIPO_CHIQI',
-    'chiqap': 'TIPO_CHIQAP', # Si 'chiqap' es la palabra clave para el tipo booleano
+    'chiqap': 'TIPO_CHIQAP',
     'qillqa': 'TIPO_QILLQA',
 
-    # Literales booleanos
     'chiqaq': 'CHIQAP_TOKEN_CHIQAQ',
     'mana_chiqap': 'CHIQAP_TOKEN_MANA_CHIQAQ'
 }

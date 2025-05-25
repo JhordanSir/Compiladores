@@ -17,41 +17,65 @@ En WayraSimi, el desarrollador encuentra una plataforma que prioriza tanto la **
 - **Compilación a código nativo**: Produce binarios de alto rendimiento compilando directamente a código máquina.
 - **Manejo de errores simplificado**: Combina la explicitud de Go con una sintaxis más sencilla y menos repetitiva.
 
-## Implementación de Lexemas
 
-WayraSimi utiliza el siguiente código basado en Python para definir su tabla de tokens y las expresiones regulares asociadas:
+Este proyecto consiste en estos elementos:
+1. Analizador sintáctico del lenguaje.
+2. Visualizador de three.js en 3d para mostrar el árbol sintáctico
+
+## Prerequisitos
+
+- Tener python 3.x o más para el analizador
+- Tener Node.js y npm para la visualización del frontend
+
+## Correr Proyecto
+
+1. Correr el analizador
+
+El analizador lee el archivo tablita.csv
 
 ```python
-import ply.lex as lex
+python analizadorSintactico.py
+```
 
-# Tabla de lexemas para WayraSimi
-tokens = [
-    'YUPAY_TOKEN',  # Número o decimal
-    'CHIQAP_TOKEN',  # Booleano
-    'QILLQA_TOKEN',  # Texto o letra
-    'IDENTIFICADOR_TOKEN',  # Identificador de variables o funciones
-    'OPERADOR_MAS',  # +
-    'OPERADOR_MENOS',  # -
-    # Otros tokens...
-]
+Se puede cambiar la entrada en el archivo para probar con una expresión diferente. Esto genera un arbol sintáctico en formato DOT de GraphViz.
 
-# Expresiones regulares para tokens simples
-t_OPERADOR_MAS = r'\+'
-t_OPERADOR_MENOS = r'-'
+2. Ejecutar la visualización del FrontEnd
 
-def t_YUPAY_TOKEN(t):
-    r'\d+(\.\d+)?'
-    t.value = float(t.value) if '.' in t.value else int(t.value)
-    return t
+```javascript
+cd Frontend/WayraSimi
+npm install
+npm run dev
+```
 
-def t_CHIQAP_TOKEN(t):
-    r'chiqap|mana_chiqap'
-    t.value = True if t.value == 'chiqap' else False
-    return t
+Esto hará que corra el servidor de desarrollo en un puerto donde se podrá visualizar el árbol sintáctico en 3D.
 
-# Manejo de errores léxicos
-def t_error(t):
-    print(f"Error léxico: Carácter ilegal '{t.value[0]}' en línea {t.lineno}, posición {t.lexpos}")
-    t.lexer.skip(1)
+## ¿Cómo Funciona?
 
-lexer = lex.lex()
+### Analizador Sintáctico
+El analizador sintáctico realiza lo siguiente:
+
+1. Carga el archivo tabla.csv
+2. Tokeniza las expresiones del input
+3. Aplica las reglas y genera el árbol sintáctico
+4. Exporta el árbol en formato GraphViz en otro archivo llamado arbol.txt
+
+### Visualizador 3D
+El frontend usa Three.js para:
+
+1. Leer el arbol sintáctico generado del archivo arbol.txt
+2. Evalua el formato GraphViz
+3. Crea una representación 3D del árbol sintáctico haciendo uso de:
+    - Esferas azules para símbolos no terminales
+    - Esferas verdes para símbolos terminales
+    - Esferas naranjas para producciones epsilon
+
+### Controles
+La vista 3D ofrece estos controles:
+
+- Orbita: Clic y arrastrar para rotar la cámara
+- Zoom: Para acercarse y alejarse
+- Flechas: Para navegar por el árbol
+- Selector de temas: Para cambiar los colores de la visualización
+- Botón de Screenshot: Para capturar la vista actual del árbol
+
+
