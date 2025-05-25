@@ -4,7 +4,7 @@ ruray id ( yupay : id , yupay : id ) yupay {
     kutipay num ; 
 } 
 
-ruray id ( yupay : id ) qillqa { 
+ruray id2 ( yupay : id ) qillqa { 
     sichus ( id < id ( ) utaq id == id ( ) ) { 
         imprimiy ( id ) ; 
     } 
@@ -15,7 +15,8 @@ ruray id ( yupay : id ) qillqa {
     } 
 }
 
-ruray hatun_ruray ( ) { 
+ruray hatun_ruray ( ) {
+    var id yupay;
     imprimiy ( adsfasdfads ( num , num ) * fdasfasfs ) ; 
     imprimiy ( "texto" ) ; 
 } 
