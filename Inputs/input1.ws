@@ -1,3 +1,7 @@
+ruray factorial() {
+    imprimiy("¡Allin punchaw, Pachamama!");
+}
+
 ruray hatun_ruray() {
-    imprimiy("¡Allin punchaw, Pachamama!"); $
+    var promedio yupay;
 }

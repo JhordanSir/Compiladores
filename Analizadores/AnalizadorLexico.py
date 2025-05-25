@@ -207,7 +207,7 @@ def analyze_file(filepath):
 
 if __name__ == '__main__':
     example_files = [
-        "E:\\Compiladores\\Inputs\\input4.ws" # Asegúrate que esta ruta sea correcta
+        "E:\\Compiladores\\Inputs\\input4.ws" 
     ]
 
     for filepath in example_files:
