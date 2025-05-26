@@ -35,17 +35,18 @@ tokens = [
     'COMENTARIO_TOKEN_BLOQUE_ABRE',
     'COMENTARIO_TOKEN_BLOQUE_CIERRA',
     'PALABRA_RESERVADA_SICHUS',
-    'PALABRA_RESERVADA_MANA_SICHUS', 
+    'PALABRA_RESERVADA_MANA_SICHUS',
     'PALABRA_RESERVADA_MANA',
     'PALABRA_RESERVADA_PARA',
     'PALABRA_RESERVADA_RURAY',
     'PALABRA_RESERVADA_KUTIPAY',
     'PALABRA_RESERVADA_IMPRIMIY',
     'PALABRA_RESERVADA_AYLLU',
-    'PALABRA_RESERVADA_VAR',        
+    'PALABRA_RESERVADA_VAR',
     'PALABRA_RESERVADA_TAKYAQ',
     'PALABRA_RESERVADA_UYWA',
     'PALABRA_RESERVADA_UYA',
+    'PALABRA_RESERVADA_PAKIY',
     'HATUN_RURAY_TOKEN',
 
     'TIPO_YUPAY',
@@ -207,7 +208,7 @@ def analyze_file(filepath):
 
 if __name__ == '__main__':
     example_files = [
-        "E:\\Compiladores\\Inputs\\input3.ws" 
+        "E:\\Compiladores\\Inputs\\input4.ws" 
     ]
 
     for filepath in example_files:

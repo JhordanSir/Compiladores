@@ -249,7 +249,7 @@ def exportar_arbol_a_graphviz(raiz, nombre_archivo="arbol_parseo.dot"):
 
 if __name__ == '__main__':
     tabla_csv_path = "E:\\Compiladores\\Gramática\\tablitaTransiciones.csv"
-    archivo_entrada_path = "E:\\Compiladores\\Inputs\\input3.ws"
+    archivo_entrada_path = "E:\\Compiladores\\Inputs\\input4.ws"
 
     print(f"--- Cargando tabla de parsing desde: {tabla_csv_path} ---")
     tabla_parsing = cargar_tabla_desde_csv(tabla_csv_path)

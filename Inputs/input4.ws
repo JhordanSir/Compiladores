@@ -1,26 +1,51 @@
-# prueba en general
+# codigo fibo
 
-# hola
+var texto qillqa = " var_global " ;
 
-var id yupay;
-
-ruray id ( yupay : id , yupay : id ) yupay { 
-    kutipay num ; 
-} 
-
-ruray id2 ( yupay : id ) qillqa { 
-    sichus ( id < id ( ) utaq id == id ( ) ) { 
-        imprimiy ( id ) ; 
-    } 
-    para ( sadfsadfsa := id ; id < id ; id ++ ) { 
-        para ( id := id ; id < id ; id ++ ) { 
-            imprimiy ( "Pavo de MIguel" ) ; 
-        } 
-    } 
+ruray fact ( yupay : id ) yupay
+{
+    var p chiqi = - 13.1415 ;
+    sichus ( id == 1 wan id > 0 ) 
+    { 
+        kutipay 1 ; 
+    }
+    mana_sichus ( id > 1 ) 
+    { 
+        kutipay id * fact ( id - 1 ) ; 
+    }
 }
 
-ruray hatun_ruray ( ) {
-    var id yupay;
-    imprimiy ( id2 ( num , num ) * fdasfasfs ) ; 
-    imprimiy ( "texto" ) ; 
+ruray hatun_ruray ( ) 
+{
+    var float chiqi = -0.1 ;
+    float = -0.1 + 1.0 ;
+    var num yupay = 10 ;
+    num = -1 + 2 ;
+    var bool chiqap = chiqaq ; 
+    var text qillqa = " texto " ;
+    num = 5 ;
+    sichus ( num < 5 utaq num > 2)
+    {
+        pakiy ;
+    }
+    para ( id = 3 ; id < 4 ; id ++ ) 
+    { 
+        para ( id = 2 ; id > 0 ; id -- ) 
+        { 
+            bool = mana_chiqap ; 
+            imprimiy ( fact ( num ) * 10 ) ; 
+            imprimiy ( bool_negation ( bool ) ) ;
+            imprimiy ( texto ) ;
+        }
+        id = id - 1 ;
+    } 
+    text = " texto alterado " ; 
 } 
+
+ruray bool_negation ( chiqap : id , chiqi : id2  ) chiqap 
+{
+    imprimiy ( id ) ;
+    sichus ( id == chiqaq ) { kutipay mana_chiqap ; }
+    mana_sichus ( id != id2 ) { kutipay chiqaq ; }
+    mana { kutipay chiqaq ; }
+}
