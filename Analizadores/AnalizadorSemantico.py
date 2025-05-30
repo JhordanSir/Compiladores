@@ -1,49 +1,56 @@
-# --- START OF FILE AnalizadorSemantico.py ---
-
 from AnalizadorLexico import analyze_file
 from analizadorSintactico import Nodo, parser_ll1, cargar_tabla_desde_csv, TOKENS_CON_LEXEMA
 
 import tempfile
 import os
 import sys
+import copy
+
+_CURRENT_FUNCTION_RETURN_VALUE = None
+_IS_RETURNING = False
 
 class Symbol:
     def __init__(self, name, data_type, scope_name, line_declared, symbol_type="variable", params=None, value=None):
         self.name = name
-        self.data_type = data_type
+        self.data_type = data_type 
         self.scope_name = scope_name
         self.line_declared = line_declared
-        self.symbol_type = symbol_type 
-        self.params = params if params is not None else [] 
-        self.is_active = True 
-        self.value = value 
+        self.symbol_type = symbol_type  
+        self.params = params if params is not None else []  
+        self.is_active = True
+        self.value = value  
+        self.ast_node = None 
+        self.param_list_ast_node = None 
 
     def __str__(self):
-        param_str = f", Parametros: {[p for p in self.params]}" if self.symbol_type == "funcion" else ""
+        param_str = ""
+        if self.symbol_type == "funcion":
+            param_details = [f"{p['name']}:{p['type']}" for p in self.params]
+            param_str = f", Parametros: [{', '.join(param_details)}]"
+
         status_str = ", Estado: " + ("Activo" if self.is_active else "Inactivo")
         value_str = ""
         if self.symbol_type in ["variable", "parametro"]:
             if self.value is not None:
-                # Evitar mostrar placeholders como valores reales
                 if isinstance(self.value, str) and self.value.startswith("<") and self.value.endswith(">"):
-                     value_str = f", Valor: {self.value}" # Mostrar el placeholder
-                elif isinstance(self.value, str): 
+                    value_str = f", Valor: {self.value}"
+                elif isinstance(self.value, str):
                     value_str = f", Valor: \"{self.value}\""
                 elif isinstance(self.value, bool):
-                     value_str = f", Valor: {'chiqaq' if self.value else 'mana_chiqap'}"
-                else: 
+                    value_str = f", Valor: {'chiqaq' if self.value else 'mana_chiqap'}"
+                else:
                     value_str = f", Valor: {self.value}"
         
         return (f"Symbol(Nombre: {self.name}, TipoDato: {self.data_type}, Ambito: {self.scope_name}, "
                 f"TipoSimbolo: {self.symbol_type}, Linea: {self.line_declared}{param_str}{status_str}{value_str})")
 
 class ScopeManager:
-    # ... (ScopeManager sin cambios respecto a la versión anterior con .is_active)
     def __init__(self):
         self.symbol_table = []
-        self.scope_stack = ["global"] 
+        self.scope_stack = ["global"]
         self.current_scope_name = "global"
-        self.error_list = [] 
+        self.error_list = []
+        self.symbol_table_history = [] 
 
     def log_error(self, message):
         self.error_list.append(message)
@@ -53,15 +60,25 @@ class ScopeManager:
         self.current_scope_name = name
 
     def exit_scope(self):
-        if len(self.scope_stack) > 1: 
+        if len(self.scope_stack) > 1:
             exited_scope_name = self.scope_stack.pop()
             self.current_scope_name = self.scope_stack[-1]
-            if exited_scope_name != "global":
+            
+            self.symbol_table_history.append(copy.deepcopy(self.symbol_table))
+
+            if exited_scope_name != "global": 
                 for sym in self.symbol_table:
                     if sym.scope_name == exited_scope_name:
                         sym.is_active = False
+    
+    def get_last_full_symbol_table(self):
+        """Devuelve la última instantánea de la tabla de símbolos antes de la desactivación más reciente."""
+        if self.symbol_table_history:
+            return self.symbol_table_history[-1] 
+        return self.symbol_table 
 
-    def add_symbol(self, symbol_name, data_type, line_declared, symbol_type="variable", params=None, value=None):
+
+    def add_symbol(self, symbol_name, data_type, line_declared, symbol_type="variable", params=None, value=None, ast_node=None, param_list_ast_node=None):
         if not self.current_scope_name:
             self.log_error(f"Error Semántico Crítico (Línea {line_declared}): Intento de declarar símbolo '{symbol_name}' fuera de cualquier ámbito.")
             return None
@@ -72,6 +89,9 @@ class ScopeManager:
                 return None
         
         new_symbol = Symbol(symbol_name, data_type, self.current_scope_name, line_declared, symbol_type, params, value)
+        if symbol_type == "funcion":
+            new_symbol.ast_node = ast_node
+            new_symbol.param_list_ast_node = param_list_ast_node
         self.symbol_table.append(new_symbol)
         return new_symbol
 
@@ -79,66 +99,55 @@ class ScopeManager:
         for scope_name_in_stack in reversed(self.scope_stack):
             for sym in self.symbol_table:
                 if sym.name == name and sym.scope_name == scope_name_in_stack and sym.is_active:
-                    return sym 
+                    return sym
         
         self.log_error(f"Error Semántico (Línea {line_used}): Símbolo '{name}' no ha sido declarado, no es accesible o no está activo en este ámbito.")
         return None
 
     def update_symbol_value(self, name, value, line_used):
-        symbol = self.lookup_symbol(name, line_used) 
+        symbol = self.lookup_symbol(name, line_used)
         if symbol:
             if symbol.symbol_type == "variable" or symbol.symbol_type == "parametro":
-                # Actualizar solo si el nuevo valor no es un placeholder de no-literal,
-                # o si el valor actual es None (primera asignación de un literal)
-                is_placeholder = isinstance(value, str) and value.startswith("<") and value.endswith(">")
-                if not is_placeholder or symbol.value is None:
-                    symbol.value = value
+                symbol.value = value
+            elif symbol.symbol_type == "funcion":
+                 self.log_error(f"Error Semántico (Línea {line_used}): No se puede asignar un valor directamente a una función '{name}'.")
+                 return False
             return True
         return False
 
-    def get_formatted_symbol_table(self, show_only_active=False): # Nuevo parámetro
-        if not self.symbol_table:
-            return "Tabla de Símbolos vacía."
+    def format_symbol_table(self, table_to_format, title="Tabla de Símbolos"):
+        if not table_to_format:
+            return f"{title}\nTabla de Símbolos vacía."
         
-        # Filtrar símbolos si es necesario
-        symbols_to_display = []
-        if show_only_active:
-            for sym in self.symbol_table:
-                if sym.is_active:
-                    symbols_to_display.append(sym)
-        else:
-            symbols_to_display = self.symbol_table
+        header = f"{'Nombre':<18} | {'Tipo Dato':<10} | {'Ámbito':<25} | {'Tipo Símb.':<12} | {'Línea':<5} | {'Params (Func)':<30} | {'Estado':<8} | {'Valor':<20}"
+        separator = "-" * (len(header) + 15)
+        table_str_list = [f"\n--- {title} ---", header, separator]
 
-        if not symbols_to_display and show_only_active:
-            return "No hay símbolos activos para mostrar."
-        elif not symbols_to_display: # Tabla original vacía
-            return "Tabla de Símbolos vacía."
+        for sym in table_to_format:
+            ambito_display = sym.scope_name
+            params_display = ""
+            if sym.symbol_type == "funcion":
+                param_details = [f"{p['name']}:{p['type']}" for p in sym.params]
+                params_display = ', '.join(param_details)
 
-
-        header = f"{'Nombre':<18} | {'Tipo Dato':<10} | {'Ámbito':<15} | {'Tipo Símb.':<12} | {'Línea':<5} | {'Params (Func)':<20} | {'Estado':<8} | {'Valor':<20}"
-        separator = "-" * (len(header) + 7)
-        table_str = [header, separator]
-
-        for sym in symbols_to_display: # Usar la lista filtrada
-            ambito_display = "global" if sym.scope_name == "global" else f"local ({sym.scope_name})"
-            params_display = str([p for p in sym.params]) if sym.symbol_type == "funcion" else ""
             status_display = "Activo" if sym.is_active else "Inactivo"
-            value_display = "---" 
+            value_display = "---"
             if sym.symbol_type in ["variable", "parametro"]:
                 if sym.value is not None:
                     if isinstance(sym.value, str) and sym.value.startswith("<") and sym.value.endswith(">"):
                         value_display = sym.value
                     elif isinstance(sym.value, str):
-                        value_display = f"\"{sym.value}\"" 
+                        value_display = f"\"{sym.value}\""
                     elif isinstance(sym.value, bool):
                         value_display = "chiqaq" if sym.value else "mana_chiqap"
-                    else: 
+                    else:
                         value_display = str(sym.value)
             
-            table_str.append(
-                f"{sym.name:<18} | {sym.data_type:<10} | {ambito_display:<15} | {sym.symbol_type:<12} | {str(sym.line_declared):<5} | {params_display:<20} | {status_display:<8} | {value_display:<20}"
+            table_str_list.append(
+                f"{sym.name:<18} | {sym.data_type:<10} | {ambito_display:<25} | {sym.symbol_type:<12} | {str(sym.line_declared):<5} | {params_display:<30} | {status_display:<8} | {value_display:<20}"
             )
-        return "\n".join(table_str)
+        return "\n".join(table_str_list)
+
 
     def print_errors(self):
         if not self.error_list:
@@ -148,28 +157,280 @@ class ScopeManager:
             for error in self.error_list:
                 print(f"  - {error}")
 
-# --- Función Principal de Análisis Semántico ---
-def analizar_semantica_y_construir_tabla_simbolos(nodo_raiz, scope_manager):
+def get_node_value(node):
+    if node is None: return None
+    if node.valor in TOKENS_CON_LEXEMA and node.hijos and node.hijos[0]:
+        return node.hijos[0].valor
+    return node.valor
+
+def get_node_line(node):
+    if node and hasattr(node, 'token_original') and node.token_original:
+        return node.token_original.lineno
+    if node and node.hijos:
+        for hijo in node.hijos:
+            if hasattr(hijo, 'token_original') and hijo.token_original:
+                return hijo.token_original.lineno
+            if isinstance(hijo, Nodo):
+                line = get_node_line(hijo)
+                if line != "N/A":
+                    return line
+    return "N/A"
+
+def get_literal_value_from_dato_node(dato_node, scope_manager, line_num):
+    if dato_node and dato_node.hijos:
+        literal_token_node = dato_node.hijos[0]
+        raw_value = get_node_value(literal_token_node)
+        
+        if literal_token_node.valor == 'YUPAY_TOKEN': return int(raw_value)
+        if literal_token_node.valor == 'CHIQI_KAY_TOKEN': return float(raw_value)
+        if literal_token_node.valor == 'QILLQA_TOKEN': return str(raw_value)
+        if literal_token_node.valor == 'CHIQAP_TOKEN_CHIQAQ': return True
+        if literal_token_node.valor == 'CHIQAP_TOKEN_MANA_CHIQAQ': return False
+    scope_manager.log_error(f"Error Semántico (Línea {line_num}): Tipo de dato literal desconocido o malformado.")
+    return None
+
+def evaluate_expression(expression_node, scope_manager):
+    if not expression_node or expression_node.valor != 'Expression':
+        scope_manager.log_error(f"Error Interno: evaluate_expression llamado con nodo inválido: {expression_node.valor if expression_node else 'None'}")
+        return "<expresión inválida>"
+    
+    val1 = evaluate_term_logico(expression_node.hijos[0], scope_manager)
+
+    expression_prima_node = expression_node.hijos[1]
+    if expression_prima_node.hijos and expression_prima_node.hijos[0].valor != 'epsilon_node':
+        op_logico_node = expression_prima_node.hijos[0] 
+        term_logico2_node = expression_prima_node.hijos[1]
+        
+        val2 = evaluate_term_logico(term_logico2_node, scope_manager)
+
+        if not isinstance(val1, bool) or not isinstance(val2, bool):
+            line = get_node_line(op_logico_node)
+            scope_manager.log_error(f"Error Semántico (Línea {line}): Operador lógico aplicado a tipos no booleanos ('{type(val1).__name__}', '{type(val2).__name__}').")
+            return "<error tipo op lógico>"
+
+        op_type_node = op_logico_node.hijos[0] 
+        op_type = op_type_node.hijos[0].valor  
+
+        if op_type == 'OPERADOR_LOGICO_UTAQ': return val1 or val2
+        if op_type == 'OPERADOR_LOGICO_WAN': return val1 and val2
+        scope_manager.log_error(f"Error Semántico (Línea {get_node_line(op_logico_node)}): Operador lógico desconocido '{op_type}'.")
+        return "<error op lógico desconocido>"
+    return val1
+
+
+def evaluate_term_logico(term_logico_node, scope_manager):
+    val1 = evaluate_term_comparacion(term_logico_node.hijos[0], scope_manager)
+
+    term_logico_conti_node = term_logico_node.hijos[1]
+    if term_logico_conti_node.hijos and term_logico_conti_node.hijos[0].valor != 'epsilon_node':
+        op_comp_node = term_logico_conti_node.hijos[0] 
+        term_comp2_node = term_logico_conti_node.hijos[1]
+
+        val2 = evaluate_term_comparacion(term_comp2_node, scope_manager)
+        
+        op_type_node = op_comp_node.hijos[0] 
+        op_type = op_type_node.hijos[0].valor 
+
+        if type(val1) != type(val2) and not (isinstance(val1, (int, float)) and isinstance(val2, (int, float))):
+            if not (isinstance(val1, str) and isinstance(val2, str)): 
+                line = get_node_line(op_comp_node)
+                scope_manager.log_error(f"Error Semántico (Línea {line}): Comparación entre tipos incompatibles ('{type(val1).__name__}' y '{type(val2).__name__}').")
+                return "<error tipo comparación>"
+
+        try:
+            if op_type == 'OPERADOR_IGUALDAD': return val1 == val2
+            if op_type == 'OPERADOR_MANA_IGUAL': return val1 != val2
+            if not (isinstance(val1, (int, float, str)) and isinstance(val2, (int, float, str))):
+                 line = get_node_line(op_comp_node)
+                 scope_manager.log_error(f"Error Semántico (Línea {line}): Operadores de orden solo aplican a números o strings, no a '{type(val1).__name__}' y '{type(val2).__name__}'.")
+                 return "<error tipo orden>"
+
+            if op_type == 'OPERADOR_MAYOR': return val1 > val2
+            if op_type == 'OPERADOR_MENOR': return val1 < val2
+            if op_type == 'OPERADOR_MAYOR_IGUAL': return val1 >= val2
+            if op_type == 'OPERADOR_MENOR_IGUAL': return val1 <= val2
+        except TypeError: 
+            line = get_node_line(op_comp_node)
+            scope_manager.log_error(f"Error Semántico (Línea {line}): No se puede aplicar el operador de orden entre '{type(val1).__name__}' y '{type(val2).__name__}'.")
+            return "<error tipo orden>"
+
+        scope_manager.log_error(f"Error Semántico (Línea {get_node_line(op_comp_node)}): Operador de comparación desconocido '{op_type}'.")
+        return "<error op comparación desconocido>"
+    return val1
+
+def evaluate_term_comparacion(term_comparacion_node, scope_manager):
+    current_value = evaluate_sumaresta_term(term_comparacion_node.hijos[0], scope_manager)
+    
+    next_sumaresta_conti_node = term_comparacion_node.hijos[1]
+    while next_sumaresta_conti_node.hijos and next_sumaresta_conti_node.hijos[0].valor != 'epsilon_node':
+        op_node = next_sumaresta_conti_node.hijos[0]      
+        term_node = next_sumaresta_conti_node.hijos[1]     
+        next_sumaresta_conti_node = next_sumaresta_conti_node.hijos[2] 
+
+        next_value = evaluate_sumaresta_term(term_node, scope_manager)
+        operator = op_node.hijos[0].valor 
+
+        if operator == 'OPERADOR_MAS':
+            if isinstance(current_value, (int, float)) and isinstance(next_value, (int, float)):
+                current_value += next_value
+            elif isinstance(current_value, str) and isinstance(next_value, str): 
+                current_value += next_value
+            elif isinstance(current_value, str) and isinstance(next_value, (int, float, bool)):
+                current_value += str(next_value)
+            elif isinstance(current_value, (int, float, bool)) and isinstance(next_value, str):
+                current_value = str(current_value) + next_value
+            else:
+                scope_manager.log_error(f"Error Semántico (Línea {get_node_line(op_node)}): Operador '+' con tipos incompatibles ('{type(current_value).__name__}', '{type(next_value).__name__}').")
+                return "<error de tipo en suma>"
+        elif operator == 'OPERADOR_MENOS':
+            if isinstance(current_value, (int, float)) and isinstance(next_value, (int, float)):
+                current_value -= next_value
+            else:
+                scope_manager.log_error(f"Error Semántico (Línea {get_node_line(op_node)}): Operador '-' con tipo no numérico ('{type(current_value).__name__}', '{type(next_value).__name__}').")
+                return "<error de tipo en resta>"
+        else:
+            scope_manager.log_error(f"Error Semántico (Línea {get_node_line(op_node)}): Operador '{operator}' desconocido en SumaRestaConti.")
+            return "<error de operador en suma/resta>"
+            
+    return current_value
+
+def evaluate_sumaresta_term(sumaresta_term_node, scope_manager):
+    current_value = evaluate_factor(sumaresta_term_node.hijos[0], scope_manager)
+
+    next_muldivmod_conti_node = sumaresta_term_node.hijos[1]
+    while next_muldivmod_conti_node.hijos and next_muldivmod_conti_node.hijos[0].valor != 'epsilon_node':
+        op_node = next_muldivmod_conti_node.hijos[0]   
+        factor_node = next_muldivmod_conti_node.hijos[1] 
+        next_muldivmod_conti_node = next_muldivmod_conti_node.hijos[2]
+
+        next_value = evaluate_factor(factor_node, scope_manager)
+        operator = op_node.hijos[0].valor 
+
+        if not (isinstance(current_value, (int, float)) and isinstance(next_value, (int, float))):
+            scope_manager.log_error(f"Error Semántico (Línea {get_node_line(op_node)}): Operación mul/div/mod con tipo no numérico ('{type(current_value).__name__}', '{type(next_value).__name__}').")
+            return "<error de tipo en mul/div/mod>"
+
+        if operator == 'OPERADOR_PACHA': current_value *= next_value
+        elif operator == 'OPERADOR_RAKI':
+            if next_value == 0:
+                scope_manager.log_error(f"Error Semántico (Línea {get_node_line(op_node)}): División por cero.")
+                return "<división por cero>"
+            current_value /= next_value 
+        elif operator == 'OPERADOR_MODULO':
+            if next_value == 0:
+                scope_manager.log_error(f"Error Semántico (Línea {get_node_line(op_node)}): Módulo por cero.")
+                return "<módulo por cero>"
+            current_value %= next_value
+        else:
+            scope_manager.log_error(f"Error Semántico (Línea {get_node_line(op_node)}): Operador '{operator}' desconocido en MulDivModConti.")
+            return "<error de operador en mul/div/mod>"
+    return current_value
+
+def evaluate_factor(factor_node, scope_manager):
+    is_negative = False
+    actual_node_to_eval = factor_node.hijos[0]
+    
+    if factor_node.hijos[0].valor == 'OPERADOR_MENOS':
+        is_negative = True
+        actual_node_to_eval = factor_node.hijos[1]
+        
+    value = evaluate_unidad(actual_node_to_eval, scope_manager)
+
+    if is_negative:
+        if not isinstance(value, (int, float)):
+            scope_manager.log_error(f"Error Semántico (Línea {get_node_line(factor_node)}): Operador unario '-' aplicado a valor no numérico '{value}'.")
+            return "<error tipo negación>"
+        return -value
+    return value
+
+def evaluate_unidad(unidad_node, scope_manager):
+    child = unidad_node.hijos[0]
+    line_num = get_node_line(unidad_node)
+
+    if child.valor == 'Dato':
+        return get_literal_value_from_dato_node(child, scope_manager, line_num)
+    
+    elif child.valor == 'ValorUnitario':
+        id_node = child.hijos[0]
+        identifier_name = get_node_value(id_node)
+        line_num_id = get_node_line(id_node)
+        valor_unitario_rest_node = child.hijos[1]
+
+        if valor_unitario_rest_node.hijos and valor_unitario_rest_node.hijos[0].valor == 'PARENTESIS_ABRE':
+            return execute_function_call(identifier_name, valor_unitario_rest_node, scope_manager, line_num_id)
+        else: 
+            symbol = scope_manager.lookup_symbol(identifier_name, line_num_id)
+            if symbol:
+                if symbol.value is None and not (isinstance(symbol.value, str) and symbol.value.startswith("<")):
+                    scope_manager.log_error(f"Error Semántico (Línea {line_num_id}): Variable '{identifier_name}' usada antes de ser inicializada con un valor concreto.")
+                    return f"<variable '{identifier_name}' no inicializada>"
+                return symbol.value
+            return f"<variable '{identifier_name}' no declarada>"
+
+    elif child.valor == 'PARENTESIS_ABRE':
+        return evaluate_expression(unidad_node.hijos[1], scope_manager)
+    
+    scope_manager.log_error(f"Error Semántico (Línea {line_num}): No se pudo evaluar el nodo Unidad '{child.valor}'.")
+    return "<error en Unidad>"
+
+def execute_function_call(func_name, valor_unitario_rest_node, scope_manager, line_call):
+    global _CURRENT_FUNCTION_RETURN_VALUE, _IS_RETURNING 
+    
+    func_symbol = scope_manager.lookup_symbol(func_name, line_call)
+    if not func_symbol: return f"<función '{func_name}' no definida>"
+    if func_symbol.symbol_type != "funcion":
+        scope_manager.log_error(f"Error Semántico (Línea {line_call}): '{func_name}' no es una función.")
+        return f"<'{func_name}' no es función>"
+
+    arg_values = []
+    if len(valor_unitario_rest_node.hijos) > 1 and valor_unitario_rest_node.hijos[1].valor == 'ArgumentosFuncionOpt':
+        argumentos_funcion_opt_node = valor_unitario_rest_node.hijos[1]
+        if argumentos_funcion_opt_node.hijos and argumentos_funcion_opt_node.hijos[0].valor != 'epsilon_node':
+            current_expr_node = argumentos_funcion_opt_node.hijos[0]
+            mas_args_node = argumentos_funcion_opt_node.hijos[1]
+            while True:
+                arg_val = evaluate_expression(current_expr_node, scope_manager)
+                arg_values.append(arg_val)
+                if mas_args_node.hijos and mas_args_node.hijos[0].valor != 'epsilon_node':
+                    current_expr_node = mas_args_node.hijos[1]
+                    mas_args_node = mas_args_node.hijos[2]
+                else: break
+
+    if len(arg_values) != len(func_symbol.params):
+        scope_manager.log_error(f"Error Semántico (Línea {line_call}): Función '{func_name}' esperaba {len(func_symbol.params)} argumento(s), recibió {len(arg_values)}.")
+        return f"<error args '{func_name}'>"
+
+    if not func_symbol.ast_node:
+        scope_manager.log_error(f"Error Interno: No se encontró el AST para la función '{func_name}'.")
+        return f"<error AST func '{func_name}'>"
+        
+    outer_is_returning = _IS_RETURNING
+    outer_return_value = _CURRENT_FUNCTION_RETURN_VALUE
+
+    _IS_RETURNING = False 
+    _CURRENT_FUNCTION_RETURN_VALUE = None
+
+    function_scope_name = f"func_call_{func_name}_{line_call}_{len(scope_manager.scope_stack)}"
+    scope_manager.enter_scope(function_scope_name)
+
+    for i, param_info in enumerate(func_symbol.params):
+        scope_manager.add_symbol(param_info['name'], param_info['type'], param_info['line'], 
+                                 symbol_type="parametro", value=arg_values[i])
+    
+    analizar_semantica_y_construir_tabla_simbolos(func_symbol.ast_node, scope_manager, is_function_execution=True)
+
+    returned_value_from_this_call = _CURRENT_FUNCTION_RETURN_VALUE 
+    
+    scope_manager.exit_scope() 
+    
+    _IS_RETURNING = outer_is_returning
+    _CURRENT_FUNCTION_RETURN_VALUE = outer_return_value
+    
+    return returned_value_from_this_call
+
+def analizar_semantica_y_construir_tabla_simbolos(nodo_raiz, scope_manager, is_function_execution=False):
     if nodo_raiz is None:
         return
-
-    # --- Funciones Auxiliares Internas ---
-    def get_node_value(node):
-        if node is None: return None
-        if node.valor in TOKENS_CON_LEXEMA and node.hijos and node.hijos[0]:
-            return node.hijos[0].valor 
-        return node.valor 
-
-    def get_node_line(node):
-        if node and hasattr(node, 'token_original') and node.token_original:
-            return node.token_original.lineno
-        if node and node.hijos: # Intenta obtener del primer hijo si el nodo actual no tiene
-            if hasattr(node.hijos[0], 'token_original') and node.hijos[0].token_original:
-                 return node.hijos[0].token_original.lineno
-            for hijo in node.hijos: # Fallback recursivo
-                line = get_node_line(hijo)
-                if line != "N/A": return line
-        return "N/A"
 
     def extract_data_type_from_type_node(type_node_container):
         if type_node_container and type_node_container.valor == 'Type' and \
@@ -178,26 +439,32 @@ def analizar_semantica_y_construir_tabla_simbolos(nodo_raiz, scope_manager):
             raw_data_type = specific_type_node.valor
             if raw_data_type == 'TIPO_YUPAY': return 'yupay'
             if raw_data_type == 'TIPO_QILLQA': return 'qillqa'
-            if raw_data_type == 'TIPO_CHIQI': return 'chiqi' 
+            if raw_data_type == 'TIPO_CHIQI': return 'chiqi'
             if raw_data_type == 'TIPO_CHIQAP': return 'chiqap'
-            return raw_data_type 
-        return "desconocido"
-    
-    def extract_param_types_from_param_list(param_list_node):
-        param_types = []
+            return raw_data_type
+        return "void" 
+
+    def extract_param_details_from_param_list(param_list_node):
+        param_details_list = []
         if not (param_list_node and param_list_node.valor == 'ParamList' and \
                 param_list_node.hijos and len(param_list_node.hijos) == 2 and \
                 param_list_node.hijos[0].valor == 'Param' and \
                 param_list_node.hijos[1].valor == 'ParamTail'):
-            return param_types 
+            return param_details_list
+        
         current_P_node = param_list_node.hijos[0]
         current_PT_node = param_list_node.hijos[1]
         while True:
             if current_P_node.valor == 'Param' and len(current_P_node.hijos) == 3:
-                param_type_container_node = current_P_node.hijos[0]
+                param_type_container_node = current_P_node.hijos[0] 
+                param_name_node = current_P_node.hijos[2]          
+                
+                param_name = get_node_value(param_name_node)
                 param_type_str = extract_data_type_from_type_node(param_type_container_node)
-                param_types.append(param_type_str)
+                linea_decl_param = get_node_line(param_name_node)
+                param_details_list.append({'name': param_name, 'type': param_type_str, 'line': linea_decl_param})
             else: break 
+            
             if current_PT_node.hijos and len(current_PT_node.hijos) == 3 and \
                current_PT_node.hijos[0].valor == 'COMA_TOKEN' and \
                current_PT_node.hijos[1].valor == 'Param' and \
@@ -208,129 +475,59 @@ def analizar_semantica_y_construir_tabla_simbolos(nodo_raiz, scope_manager):
                  (len(current_PT_node.hijos) == 1 and current_PT_node.hijos[0].valor == 'epsilon_node'):
                 break 
             else: break
-        return param_types
+        return param_details_list
 
-    def evaluate_expression_for_literal_value(expression_node):
-        """
-        Recorre el subárbol de la expresión buscando un nodo Dato que contenga un literal.
-        Devuelve el valor literal (int, float, str, bool) o un placeholder string.
-        """
-        if not expression_node or expression_node.valor != 'Expression':
-            return "<expresión inválida>"
+    def visit_node_recursive(node):
+        global _IS_RETURNING, _CURRENT_FUNCTION_RETURN_VALUE
+        nonlocal is_function_execution
 
-        # Contador para limitar la profundidad de la búsqueda y evitar bucles infinitos en ASTs malformados.
-        # Y para detectar si la expresión es más que un simple literal.
-        nodes_processed_for_value = 0
-        
-        # Usaremos una lista como pila para DFS manual, para tener más control.
-        # Cada elemento de la pila será (nodo, profundidad)
-        stack = [(expression_node, 0)]
-        # Conjunto para evitar revisitar nodos en esta búsqueda específica (útil si hay ciclos o muchas ramas)
-        # Esto es local a esta función de evaluación.
-        visited_in_eval = set() 
-
-        has_operators_or_calls = False
-
-        while stack:
-            current_node, depth = stack.pop()
-
-            if current_node in visited_in_eval or depth > 10: # Limitar profundidad
-                continue
-            visited_in_eval.add(current_node)
-            nodes_processed_for_value += 1
-
-            # Detección temprana de complejidad (operadores, llamadas)
-            if current_node.valor == 'ExpressionPrima' and current_node.hijos: has_operators_or_calls = True; break
-            if current_node.valor == 'TermLogicoConti' and current_node.hijos: has_operators_or_calls = True; break
-            if current_node.valor == 'FactorConti' and current_node.hijos: has_operators_or_calls = True; break
-            if current_node.valor == 'ValorUnitario' and current_node.hijos: # ID o llamada
-                # Si ValorUnitarioRest no es epsilon, es una llamada
-                if len(current_node.hijos) > 1 and current_node.hijos[1].valor == 'ValorUnitarioRest' and current_node.hijos[1].hijos:
-                    has_operators_or_calls = True; break 
-                # Si es solo un ID, también cuenta como no literal en este contexto simple
-                has_operators_or_calls = True; break # Considerar un ID solo como no literal aquí
-            if current_node.valor == 'PARENTESIS_ABRE': # Expresión parentizada
-                has_operators_or_calls = True; break
-
-
-            if current_node.valor == 'Dato':
-                if current_node.hijos:
-                    literal_token_node = current_node.hijos[0]
-                    if literal_token_node.valor in TOKENS_CON_LEXEMA:
-                        if literal_token_node.hijos and literal_token_node.hijos[0]:
-                            # Se encontró un literal antes de cualquier complejidad.
-                            return literal_token_node.hijos[0].valor
-                    elif literal_token_node.valor == 'CHIQAP_TOKEN_CHIQAQ': return True
-                    elif literal_token_node.valor == 'CHIQAP_TOKEN_MANA_CHIQAQ': return False
-            
-            # Añadir hijos a la pila para DFS (en orden inverso para procesar el primero que se añade)
-            if current_node.hijos:
-                for child in reversed(current_node.hijos):
-                    if child.valor != 'epsilon_node':
-                        stack.append((child, depth + 1))
-        
-        if has_operators_or_calls:
-            return "<expresión compleja>" # Si se detectó complejidad
-        
-        # Si se recorrió mucho sin encontrar un Dato literal simple.
-        if nodes_processed_for_value > 1: # Si no es solo Expression -> ... -> Dato (1-2 nodos)
-            return "<expresión no-literal>"
-            
-        return "<valor no determinado>" # Fallback
-
-    # --- Función de Visita Principal ---
-    def visit(node):
-        # (La lógica de visit permanece igual que en la respuesta anterior,
-        #  solo asegúrate que las llamadas a add_symbol y update_symbol_value
-        #  usen el valor retornado por evaluate_expression_for_literal_value)
-
-        if node is None or node.valor == 'epsilon_node':
+        if node is None or node.valor == 'epsilon_node' or (_IS_RETURNING and is_function_execution) :
             return
 
         node_type = node.valor
 
         if node_type == 'Program':
-            if node.hijos and node.hijos[0].valor == 'DefinitionList':
-                visit(node.hijos[0])
-            else: 
-                for hijo in node.hijos: visit(hijo)
+            for hijo in node.hijos: visit_node_recursive(hijo)
 
         elif node_type == 'DefinitionList':
-            if not node.hijos or (len(node.hijos) == 1 and node.hijos[0].valor == 'epsilon_node'):
-                return
+            if not node.hijos or (len(node.hijos) == 1 and node.hijos[0].valor == 'epsilon_node'): return
+            
             first_child_node = node.hijos[0]
-            if first_child_node.valor == 'PALABRA_RESERVADA_RURAY':
-                if len(node.hijos) == 3:
-                    visit(node.hijos[1]) 
-                    visit(node.hijos[2]) 
-                else: scope_manager.log_error(f"Error AST (Línea {get_node_line(node)}): Estructura DefinitionList (RURAY) inválida.")
+            if first_child_node.valor == 'PALABRA_RESERVADA_RURAY': 
+                visit_node_recursive(node.hijos[1]) 
+                if _IS_RETURNING and is_function_execution: return 
+                visit_node_recursive(node.hijos[2]) 
             elif first_child_node.valor == 'PALABRA_RESERVADA_VAR': 
-                if len(node.hijos) == 6:
-                    identificador_node = node.hijos[1]
-                    type_container_node = node.hijos[2]
-                    inicializacion_opt_node = node.hijos[3]
-                    
-                    variable_name = get_node_value(identificador_node)
-                    data_type_str = extract_data_type_from_type_node(type_container_node)
-                    linea_declaracion = get_node_line(identificador_node)
-                    initial_value = None
+                identificador_node = node.hijos[1]
+                type_container_node = node.hijos[2]
+                inicializacion_opt_node = node.hijos[3]
+                
+                variable_name = get_node_value(identificador_node)
+                data_type_str = extract_data_type_from_type_node(type_container_node)
+                linea_declaracion = get_node_line(identificador_node)
+                initial_value = None
 
-                    if inicializacion_opt_node.valor == 'InicializacionOpt' and inicializacion_opt_node.hijos:
-                        if len(inicializacion_opt_node.hijos) == 2 and inicializacion_opt_node.hijos[1].valor == 'Expression':
-                            expression_node_for_init = inicializacion_opt_node.hijos[1]
-                            initial_value = evaluate_expression_for_literal_value(expression_node_for_init)
-                            visit(expression_node_for_init) 
-                    
-                    scope_manager.add_symbol(variable_name, data_type_str, linea_declaracion, 
-                                             symbol_type="variable", value=initial_value)
-                    visit(node.hijos[5]) 
-                else: scope_manager.log_error(f"Error AST (Línea {get_node_line(node)}): Estructura DefinitionList (VAR global) inválida.")
+                if inicializacion_opt_node.valor == 'InicializacionOpt' and inicializacion_opt_node.hijos and \
+                   len(inicializacion_opt_node.hijos) == 2 and inicializacion_opt_node.hijos[1].valor == 'Expression':
+                    expression_node_for_init = inicializacion_opt_node.hijos[1]
+                    initial_value = evaluate_expression(expression_node_for_init, scope_manager)
+                
+                scope_manager.add_symbol(variable_name, data_type_str, linea_declaracion, 
+                                         symbol_type="variable", value=initial_value)
+                if _IS_RETURNING and is_function_execution: return
+                visit_node_recursive(node.hijos[5]) 
+            else: 
+                for hijo in node.hijos: visit_node_recursive(hijo)
+
 
         elif node_type == 'OneDefinition':
-            nombre_funcion, linea_decl_func, tipo_retorno_str, parametros_decl_node, block_node, es_hatun_ruray = "err", "N/A", "void", None, None, False
-            param_types_list = []
+            nombre_funcion, linea_decl_func, tipo_retorno_str = "err", "N/A", "void"
+            parametros_decl_node, block_node, es_hatun_ruray = None, None, False
+            param_details_list = [] 
+
             if not node.hijos: return
             first_child_of_onedef = node.hijos[0]
+
             if first_child_of_onedef.valor == 'IDENTIFICADOR_TOKEN':
                 nombre_funcion_node = first_child_of_onedef
                 nombre_funcion = get_node_value(nombre_funcion_node)
@@ -338,73 +535,70 @@ def analizar_semantica_y_construir_tabla_simbolos(nodo_raiz, scope_manager):
                 if len(node.hijos) >= 6:
                     parametros_decl_node = node.hijos[2] 
                     type_opt_node = node.hijos[4]       
-                    block_node = node.hijos[5]          
+                    block_node = node.hijos[5]         
                     if type_opt_node and type_opt_node.valor == 'TypeOpt' and \
-                       type_opt_node.hijos and type_opt_node.hijos[0].valor == 'Type':
+                       type_opt_node.hijos and type_opt_node.hijos[0].valor != 'epsilon_node' and \
+                       type_opt_node.hijos[0].valor == 'Type': 
                         tipo_retorno_str = extract_data_type_from_type_node(type_opt_node.hijos[0])
+                    else: 
+                        tipo_retorno_str = "void" 
                 else: scope_manager.log_error(f"Error AST (Línea {get_node_line(node)}): Estructura OneDefinition (normal) inválida.")
+            
             elif first_child_of_onedef.valor == 'HATUN_RURAY_TOKEN':
                 nombre_funcion = "hatun_ruray"
                 es_hatun_ruray = True
                 linea_decl_func = get_node_line(first_child_of_onedef)
-                if len(node.hijos) >= 4: block_node = node.hijos[3]
+                tipo_retorno_str = "void" 
+                if len(node.hijos) >= 4:
+                     block_node = node.hijos[3] 
+                     parametros_decl_node = Nodo('ParamListOpt') 
+                     parametros_decl_node.agregar_hijo(Nodo('epsilon_node'))
                 else: scope_manager.log_error(f"Error AST (Línea {get_node_line(node)}): Estructura OneDefinition (hatun_ruray) inválida.")
-            else: 
-                for hijo in node.hijos: visit(hijo); return
-
-            if not es_hatun_ruray and parametros_decl_node and parametros_decl_node.valor == 'ParamListOpt' and \
-               parametros_decl_node.hijos and parametros_decl_node.hijos[0].valor == 'ParamList':
-                param_types_list = extract_param_types_from_param_list(parametros_decl_node.hijos[0])
-
-            if not es_hatun_ruray:
-                scope_manager.add_symbol(nombre_funcion, tipo_retorno_str, linea_decl_func, 
-                                         symbol_type="funcion", params=param_types_list)
             
-            scope_manager.enter_scope(nombre_funcion)
+            else: 
+                for hijo in node.hijos: visit_node_recursive(hijo)
+                return
+
             if parametros_decl_node and parametros_decl_node.valor == 'ParamListOpt' and \
                parametros_decl_node.hijos and parametros_decl_node.hijos[0].valor == 'ParamList':
-                param_list_node = parametros_decl_node.hijos[0]
-                if (param_list_node.hijos and len(param_list_node.hijos) == 2 and
-                    param_list_node.hijos[0].valor == 'Param' and
-                    param_list_node.hijos[1].valor == 'ParamTail'):
-                    current_P_node = param_list_node.hijos[0]
-                    current_PT_node = param_list_node.hijos[1]
-                    while True:
-                        if current_P_node.valor == 'Param' and len(current_P_node.hijos) == 3:
-                            param_type_container_node = current_P_node.hijos[0]
-                            param_name_node = current_P_node.hijos[2]
-                            param_name = get_node_value(param_name_node)
-                            param_type_str = extract_data_type_from_type_node(param_type_container_node)
-                            linea_decl_param = get_node_line(param_name_node)
-                            # Para parámetros, el valor inicial es None; se asignaría si se pasara por valor
-                            # y tuviéramos una forma de evaluar las expresiones de los argumentos de llamada.
-                            scope_manager.add_symbol(param_name, param_type_str, linea_decl_param, symbol_type="parametro", value=None)
-                        else: break 
-                        if current_PT_node.hijos and len(current_PT_node.hijos) == 3 and \
-                           current_PT_node.hijos[0].valor == 'COMA_TOKEN' and \
-                           current_PT_node.hijos[1].valor == 'Param' and \
-                           current_PT_node.hijos[2].valor == 'ParamTail':
-                            current_P_node = current_PT_node.hijos[1]
-                            current_PT_node = current_PT_node.hijos[2]
-                        else: break 
-            if block_node: visit(block_node)
-            scope_manager.exit_scope()
+                param_details_list = extract_param_details_from_param_list(parametros_decl_node.hijos[0])
 
-        elif node_type == 'DeclaracionVariable': 
+            scope_manager.add_symbol(nombre_funcion, tipo_retorno_str, linea_decl_func, 
+                                     symbol_type="funcion", params=param_details_list,
+                                     ast_node=block_node, param_list_ast_node=parametros_decl_node)
+            
+            if es_hatun_ruray and not is_function_execution:
+                scope_manager.enter_scope(nombre_funcion)
+                if block_node: visit_node_recursive(block_node) 
+                scope_manager.exit_scope() 
+
+
+        elif node_type == 'Block':
+            if node.hijos and len(node.hijos) > 1: 
+                 visit_node_recursive(node.hijos[1]) 
+
+        elif node_type == 'InstruccionesOpt':
+            if _IS_RETURNING and is_function_execution: return
+            if node.hijos and node.hijos[0].valor != 'epsilon_node':
+                visit_node_recursive(node.hijos[0]) 
+                if _IS_RETURNING and is_function_execution: return 
+                visit_node_recursive(node.hijos[1]) 
+        
+        elif node_type == 'DeclaracionVariable':
             if len(node.hijos) == 5:
                 identificador_node = node.hijos[1]
                 type_container_node = node.hijos[2]
                 inicializacion_opt_node = node.hijos[3]
+                
                 variable_name = get_node_value(identificador_node)
                 data_type_str = extract_data_type_from_type_node(type_container_node)
                 linea_declaracion = get_node_line(identificador_node)
-                initial_value = None
+                initial_value = None 
 
-                if inicializacion_opt_node.valor == 'InicializacionOpt' and inicializacion_opt_node.hijos:
-                    if len(inicializacion_opt_node.hijos) == 2 and inicializacion_opt_node.hijos[1].valor == 'Expression':
-                        expression_node_for_init = inicializacion_opt_node.hijos[1]
-                        initial_value = evaluate_expression_for_literal_value(expression_node_for_init)
-                        visit(expression_node_for_init)
+                if inicializacion_opt_node.valor == 'InicializacionOpt' and inicializacion_opt_node.hijos and \
+                   len(inicializacion_opt_node.hijos) == 2 and inicializacion_opt_node.hijos[1].valor == 'Expression':
+                    expression_node_for_init = inicializacion_opt_node.hijos[1]
+                    initial_value = evaluate_expression(expression_node_for_init, scope_manager)
                 
                 scope_manager.add_symbol(variable_name, data_type_str, linea_declaracion, 
                                          symbol_type="variable", value=initial_value)
@@ -417,139 +611,119 @@ def analizar_semantica_y_construir_tabla_simbolos(nodo_raiz, scope_manager):
                 var_name = get_node_value(identificador_node)
                 linea_uso = get_node_line(identificador_node)
                 
-                symbol = scope_manager.lookup_symbol(var_name, linea_uso) 
-                if symbol and symbol.symbol_type == "funcion":
-                    scope_manager.log_error(f"Error Semántico (Línea {linea_uso}): No se puede asignar un valor a la función '{var_name}'.")
-                
-                assigned_value = evaluate_expression_for_literal_value(expression_node)
-                if symbol: 
-                    scope_manager.update_symbol_value(var_name, assigned_value, linea_uso)
-                
-                visit(expression_node) 
+                assigned_value = evaluate_expression(expression_node, scope_manager)
+                scope_manager.update_symbol_value(var_name, assigned_value, linea_uso)
             else: scope_manager.log_error(f"Error AST (Línea {get_node_line(node)}): Estructura AssignmentStmt inválida.")
 
-        elif node_type == 'ValorUnitario':
-            if node.hijos and node.hijos[0].valor == 'IDENTIFICADOR_TOKEN':
-                id_node = node.hijos[0] 
-                id_name = get_node_value(id_node) 
-                linea_uso = get_node_line(id_node) 
-                symbol = scope_manager.lookup_symbol(id_name, linea_uso) 
-                
-                is_function_call = (len(node.hijos) > 1 and node.hijos[1].valor == 'ValorUnitarioRest' and \
-                                    node.hijos[1].hijos and node.hijos[1].hijos[0].valor == 'PARENTESIS_ABRE')
-
-                if is_function_call:
-                    if symbol and symbol.symbol_type != "funcion":
-                        scope_manager.log_error(f"Error Semántico (Línea {linea_uso}): '{id_name}' no es una función y se está intentando llamar.")
-                    elif symbol: 
-                        if len(node.hijos[1].hijos) > 1 and node.hijos[1].hijos[1].valor == 'ArgumentosFuncionOpt':
-                             visit(node.hijos[1].hijos[1]) 
-                elif symbol and symbol.symbol_type == "funcion": 
-                     scope_manager.log_error(f"Error Semántico (Línea {linea_uso}): Se usó el nombre de la función '{id_name}' como si fuera una variable. ¿Faltan paréntesis '()' para llamarla?")
-            
-            for hijo_idx, hijo_vu in enumerate(node.hijos):
-                if hijo_idx == 0 and hijo_vu.valor == 'IDENTIFICADOR_TOKEN': 
-                    if len(hijo_vu.hijos) > 0 and hijo_vu.hijos[0].valor not in TOKENS_CON_LEXEMA : visit(hijo_vu.hijos[0]) 
-                else:
-                    visit(hijo_vu)
-
-        elif node_type == 'PrintStmt':
-            if len(node.hijos) == 5 and node.hijos[2].valor == 'Expression': visit(node.hijos[2])
-            else: 
-                scope_manager.log_error(f"Error AST (Línea {get_node_line(node)}): Estructura PrintStmt inválida.")
-                for hijo in node.hijos: visit(hijo)
-        elif node_type == 'RetornoConValor':
-             if len(node.hijos) == 3 and node.hijos[1].valor == 'Expression': visit(node.hijos[1])
-             else:
-                scope_manager.log_error(f"Error AST (Línea {get_node_line(node)}): Estructura RetornoConValor inválida.")
-                for hijo in node.hijos: visit(hijo)
-        elif node_type == 'ValorUnitarioRest': 
-            if node.hijos and node.hijos[0].valor == 'PARENTESIS_ABRE': 
-                if len(node.hijos) > 1 and node.hijos[1].valor == 'ArgumentosFuncionOpt':
-                    visit(node.hijos[1]) 
-        elif node_type in ['Block', 'InstruccionesOpt', 'Instruccion', 'InicializacionOpt', 
-                           'Expression', 'TermLogico', 'TermComparacion', 'Factor', 'Unidad', 'Dato',
-                           'ExpressionPrima', 'TermLogicoConti', 'TermComparacionConti', 'FactorConti',
-                           'ArgumentosFuncionOpt', 'MasArgumentosFuncion',
-                           'Estructura_If', 'ElseOpcional', 'ManaSichusBloque', 'ArgumentosElseIf',
-                           'Bucle', 'ForLoop', 'LoopInitialization', 'AsignacionBucle', 'AsignacionBucleDato',
-                           'ExpressionOpt', 'LoopUpdateOpt', 'IncrementoStmt', 'Incremento',
-                           'ParamListOpt', 'ParamList', 'Param', 'ParamTail', 'TypeOpt', 'Type',
-                           'MulOp', 'OpcionLogico', 'OpcionComparacion',
-                           'Retorno', 'RetornoSinValor']:
-            for hijo in node.hijos:
-                visit(hijo)
+        elif node_type == 'RetornoConValor': 
+            if not is_function_execution:
+                scope_manager.log_error(f"Error Semántico (Línea {get_node_line(node)}): 'kutipay' fuera de una función.")
+            else:
+                if len(node.hijos) == 3 and node.hijos[1].valor == 'Expression':
+                    expression_node = node.hijos[1]
+                    return_value = evaluate_expression(expression_node, scope_manager)
+                    _CURRENT_FUNCTION_RETURN_VALUE = return_value
+                    _IS_RETURNING = True
+                else: scope_manager.log_error(f"Error AST (Línea {get_node_line(node)}): Estructura RetornoConValor inválida.")
         
+        elif node_type == 'RetornoSinValor': 
+            if not is_function_execution:
+                 scope_manager.log_error(f"Error Semántico (Línea {get_node_line(node)}): 'pakiy' fuera de una función o bucle.")
+            else: 
+                _CURRENT_FUNCTION_RETURN_VALUE = None 
+                _IS_RETURNING = True
+        
+        elif node_type == 'PrintStmt': 
+            if len(node.hijos) == 5 and node.hijos[2].valor == 'Expression':
+                value_to_print = evaluate_expression(node.hijos[2], scope_manager)
+                if isinstance(value_to_print, bool):
+                    print("chiqaq" if value_to_print else "mana_chiqap")
+                else:
+                    print(value_to_print)
+            else:
+                scope_manager.log_error(f"Error AST (Línea {get_node_line(node)}): Estructura PrintStmt inválida.")
+                for hijo in node.hijos: visit_node_recursive(hijo)
+
+
+        elif node_type in ['Instruccion', 
+                           'Estructura_If', 'IfStmt', 'ElsePart', 'ArgumentosElseIfOpt', 
+                           'Bucle', 'ForLoop', 'LoopInitialization', 'LoopDeclOrAssign', 
+                           'DeclaracionVariableSimple', 'AssignmentStmtSimple', 'ExpressionOpt', 
+                           'LoopUpdateOpt', 'IncrementoStmt', 'Incremento', 'IncrementoOpPlus', 'IncrementoOpMinus'
+                           ]:
+            if _IS_RETURNING and is_function_execution: return
+            for hijo in node.hijos:
+                visit_node_recursive(hijo)
+                if _IS_RETURNING and is_function_execution: break 
+
         elif node_type.endswith('_TOKEN') or node_type.startswith('PALABRA_RESERVADA_') or \
              node_type.startswith('TIPO_') or node_type.startswith('OPERADOR_') or \
              node_type in ['PARENTESIS_ABRE', 'PARENTESIS_CIERRA', 'LLAVE_ABRE', 'LLAVE_CIERRA',
                             'COMA_TOKEN', 'PUNTO_Y_COMA_TOKEN', 'DOS_PUNTOS_TOKEN', '$',
-                            'MulOpPacha', 'MulOpRakiy', 'MulOpModulo', 'MulOpSum', 'MulOpRes', 
-                            'OpcionLogicoWan', 'OpcionLogicoUtaq', 
-                            'OpcionComparacionIgual', 'OpcionComparacionNoIgual', 
-                            'OpcionComparacionMenor', 'OpcionComparacionMayor', 
-                            'OpcionComparacionMenorIgual', 'OpcionComparacionMayorIgual',
-                            'IncrementoOpPlus', 'IncrementoOpMinus'
-                            ]:
+                            'InicializacionOpt', 'ParamListOpt', 'Param', 'ParamTail', 'TypeOpt', 'Type',
+                            'SumaRestaOp', 'MulDivModOp', 'OpcionLogico', 'OpcionLogicoWan', 'OpcionLogicoUtaq',
+                            'OpcionComparacion', 'OpcionComparacionIgual', 'OpcionComparacionNoIgual',
+                            'OpcionComparacionMenor', 'OpcionComparacionMayor', 'OpcionComparacionMenorIgual',
+                            'OpcionComparacionMayorIgual', 'Dato',
+                            'Expression', 'TermLogico', 'TermComparacion', 'SumaRestaTerm', 'Factor', 'Unidad',
+                            'ExpressionPrima', 'TermLogicoConti', 'SumaRestaConti', 'MulDivModConti',
+                            'ValorUnitario', 'ValorUnitarioRest', 'ArgumentosFuncionOpt', 'MasArgumentosFuncion'
+                           ]:
             pass 
         else: 
+            if _IS_RETURNING and is_function_execution: return
             for hijo in node.hijos: 
-                visit(hijo)
+                visit_node_recursive(hijo)
+                if _IS_RETURNING and is_function_execution: break
     
-    visit(nodo_raiz)
+    visit_node_recursive(nodo_raiz)
 
-
-# --- Funciones para construir el AST y ejecutar ---
 def construir_arbol_sintactico(codigo_fuente_str, ruta_tabla_csv, simbolo_inicial='Program'):
     lista_de_tokens = None
     temp_file_path = None
-    # original_stdout = sys.stdout 
-    # null_out = open(os.devnull, 'w')
-    # sys.stdout = null_out
+    original_stdout = sys.stdout 
+
     try:
         with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".ws", encoding='utf-8') as tmp_file:
             tmp_file.write(codigo_fuente_str)
             temp_file_path = tmp_file.name
-        lista_de_tokens = analyze_file(temp_file_path)
+        
+        lista_de_tokens = analyze_file(temp_file_path)  
+    
     except ImportError:
-        # sys.stdout = original_stdout
-        # null_out.close()
+        sys.stdout = original_stdout 
         print("Error Crítico: No se pudo importar 'AnalizadorLexico.analyze_file'.")
         return None
     except Exception as e:
-        # sys.stdout = original_stdout
-        # null_out.close()
+        sys.stdout = original_stdout
         print(f"Error durante el análisis léxico o al procesar el archivo temporal: {e}")
         return None
     finally:
         if temp_file_path and os.path.exists(temp_file_path):
             try: os.remove(temp_file_path)
             except OSError: pass 
-    # sys.stdout = original_stdout 
-    # null_out.close()
+    
+    sys.stdout = original_stdout 
+    
     if lista_de_tokens is None:
         print("Error: El análisis léxico no produjo una lista de tokens.")
         return None
+
     tabla_parsing = cargar_tabla_desde_csv(ruta_tabla_csv)
     if tabla_parsing is None:
         print("Error: La tabla de parsing no pudo ser cargada.")
         return None
-    # original_stdout = sys.stdout
-    # null_out = open(os.devnull, 'w')
-    # sys.stdout = null_out
+
     arbol_sintactico_raiz = parser_ll1(
         lista_de_tokens,
         tabla_parsing,
         start_symbol=simbolo_inicial
     )
-    # sys.stdout = original_stdout
-    # null_out.close()
     return arbol_sintactico_raiz
 
-# --- Bloque Principal ---
 if __name__ == "__main__":
-    tabla_csv_path = "E:\\Compiladores\\Gramática\\tablitaTransiciones.csv" 
-    archivo_entrada_path = "E:\\Compiladores\\Inputs\\input1.ws" 
+    tabla_csv_path = "E:\\Compiladores\\Gramática\\tablitaTransiciones.csv"
+    archivo_entrada_path = "E:\\Compiladores\\Inputs\\input7.ws" 
     
     codigo_a_parsear = None
     try:
@@ -569,20 +743,31 @@ if __name__ == "__main__":
     raiz_arbol = construir_arbol_sintactico(codigo_fuente_str=codigo_a_parsear, ruta_tabla_csv=tabla_csv_path)
     
     if raiz_arbol:
-        print("\n--- Iniciando Análisis Semántico ---")
+        print("\n--- Salida de Consola ---")
         if 'TOKENS_CON_LEXEMA' not in globals():
-             print("ALERTA CRÍTICA: 'TOKENS_CON_LEXEMA' no está definido globalmente.")
-        
+             print("ALERTA CRÍTICA: 'TOKENS_CON_LEXEMA' no está definido globalmente en AnalizadorSemantico.")
+             TOKENS_CON_LEXEMA = {'IDENTIFICADOR_TOKEN', 'QILLQA_TOKEN', 'YUPAY_TOKEN', 'CHIQI_KAY_TOKEN'}
+
         scope_manager = ScopeManager()
+        _IS_RETURNING = False
+        _CURRENT_FUNCTION_RETURN_VALUE = None
+        
         analizar_semantica_y_construir_tabla_simbolos(raiz_arbol, scope_manager)
         
-        print("\n--- Tabla de Símbolos Completa (Incluye Inactivos) ---")
-        print(scope_manager.get_formatted_symbol_table()) # Llama sin filtro
+        def filter_hatun_ruray(symbol_list):
+            return [s for s in symbol_list if not (s.name == "hatun_ruray" and s.symbol_type == "funcion")]
 
-        print("\n--- Tabla de Símbolos (Solo Activos al Final del Análisis) ---")
-        print(scope_manager.get_formatted_symbol_table(show_only_active=True)) # Llama con filtro
+        final_symbol_table_snapshot_all = copy.deepcopy(scope_manager.symbol_table)
+        final_symbol_table_filtered = filter_hatun_ruray(final_symbol_table_snapshot_all)
+        print(scope_manager.format_symbol_table(final_symbol_table_filtered, 
+                                                title="Tabla de Símbolos COMPLETA"))
+
+        active_symbols_final_all = [s for s in scope_manager.symbol_table if s.is_active]
+        active_symbols_final_filtered = filter_hatun_ruray(active_symbols_final_all)
+        print(scope_manager.format_symbol_table(active_symbols_final_filtered, 
+                                                title="Tabla de Símbolos SÓLO ACTIVOS"))
         
         scope_manager.print_errors()
         
     else:
-        print("\n❌ Falló el análisis sintáctico. No se generó el árbol.")
+        print("\n❌ Falló el análisis sintáctico o léxico. No se generó el árbol.")

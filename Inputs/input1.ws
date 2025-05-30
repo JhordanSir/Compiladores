@@ -1,21 +1,19 @@
 # prueba de variables globales y locales
 
-var jufghj yupay;
 
-ruray id ( )  { 
-    var num yupay ;
-} 
+var global qillqa = "Hola Mundo";
 
-var global2 yupay = 5;
-
-ruray id2 ( yupay : id )  { 
-    global2 * global2 * jufghj;
+ruray Suma ( chiqi : arg1 , chiqi : arg2 ) chiqi {
+    var sum chiqi = arg1 + arg2;
+    kutipay sum;
 }
 
 ruray hatun_ruray ( ) {
-    var y yupay = 5;
-    var z yupay = 10;
-    var x yupay = z + y ;
-    var texto qillqa = "Hola Mundo";
-    imprimiy ( texto ) ;
-} 
+    var y chiqi = 10.5;
+    var z chiqi = 6;
+    z=16;
+    var x chiqi = Suma (y , z) ;
+    imprimiy ( Suma (y , z) ) ;
+    global = "Miguel";
+    
+}

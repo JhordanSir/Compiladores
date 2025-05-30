@@ -1,9 +1,10 @@
-# prueba de funciones
+ruray operacion ( yupay : n ) yupay {
+    imprimiy (n);
+    kutipay operacion(n-1);
+}   
 
-ruray id ( yupay : id ) yupay { 
-    kutipay id ( ) ; 
-}
-
-ruray hatun_ruray ( ) {
-    var id yupay ;
+ruray hatun_ruray (){
+    var x yupay = 5;
+    x = operacion (x);
+    imprimiy (x);
 }
