@@ -1,6 +1,5 @@
 # prueba de variables globales y locales
 
-
 var global qillqa = "Hola Mundo";
 
 ruray Suma ( chiqi : arg1 , chiqi : arg2 ) chiqi {

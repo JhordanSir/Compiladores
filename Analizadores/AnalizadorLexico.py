@@ -208,7 +208,7 @@ def analyze_file(filepath):
 
 if __name__ == '__main__':
     example_files = [
-        "E:\\Compiladores\\Inputs\\input6.wasi" 
+        "E:\\Compiladores\\Inputs\\input1.wasi" 
     ]
 
     for filepath in example_files:

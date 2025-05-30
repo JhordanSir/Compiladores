@@ -39,10 +39,10 @@ ruray hatun_ruray ( )
     { 
         para ( id2 = 1000 ; id2 > 0 ; id2 -- ) 
         { 
+            id2--;
             bool = mana_chiqap ; 
             imprimiy ( fact ( num ) * 10 ) ; 
-            imprimiy ( bool_negation ( bool,bool ) ) ;
-            imprimiy ( texto ) ;
+            imprimiy ( bool_negation ( bool,bool ), texto ) ; # corregir
             pakiy ;
         }
     } 

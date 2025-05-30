@@ -1,310 +1,116 @@
 Program -> DefinitionList
-
-
-
-
 DefinitionList -> PALABRA_RESERVADA_RURAY OneDefinition DefinitionList
 DefinitionList -> PALABRA_RESERVADA_VAR IDENTIFICADOR_TOKEN Type InicializacionOpt PUNTO_Y_COMA_TOKEN DefinitionList
 DefinitionList -> ''
-
-
-
-
 OneDefinition -> IDENTIFICADOR_TOKEN PARENTESIS_ABRE ParamListOpt PARENTESIS_CIERRA TypeOpt Block
 OneDefinition -> HATUN_RURAY_TOKEN PARENTESIS_ABRE PARENTESIS_CIERRA Block
-
-
-
-
 Block -> LLAVE_ABRE InstruccionesOpt LLAVE_CIERRA
-
-
-
-
 InstruccionesOpt -> Instruccion InstruccionesOpt
 InstruccionesOpt -> ''
-
-
-
-
 Instruccion -> PrintStmt
 Instruccion -> Bucle
 Instruccion -> Estructura_If
 Instruccion -> Retorno
 Instruccion -> DeclaracionVariable
-Instruccion -> AssignmentStmt
-
-
-
-
+Instruccion -> IdStmt
 DeclaracionVariable -> PALABRA_RESERVADA_VAR IDENTIFICADOR_TOKEN Type InicializacionOpt PUNTO_Y_COMA_TOKEN
-
-
-
-
-AssignmentStmt -> IDENTIFICADOR_TOKEN OPERADOR_ASIGNACION Expression PUNTO_Y_COMA_TOKEN
-
-
-
-
+IdStmt -> IDENTIFICADOR_TOKEN IdStmtContinuation
+IdStmtContinuation -> OPERADOR_ASIGNACION Expression PUNTO_Y_COMA_TOKEN
+IdStmtContinuation -> Incremento PUNTO_Y_COMA_TOKEN
 InicializacionOpt -> OPERADOR_ASIGNACION Expression
 InicializacionOpt -> ''
-
-
-
-
 ParamListOpt -> ParamList
 ParamListOpt -> ''
-
-
-
-
 ParamList -> Param ParamTail
-
-
-
-
 Param -> Type DOS_PUNTOS_TOKEN IDENTIFICADOR_TOKEN
-
-
-
-
 ParamTail -> COMA_TOKEN Param ParamTail
 ParamTail -> ''
-
-
-
-
 Type -> TIPO_YUPAY
 Type -> TIPO_CHIQI
 Type -> TIPO_CHIQAP
 Type -> TIPO_QILLQA
-
-
-
-
 TypeOpt -> Type
 TypeOpt -> ''
-
-
-
-
-PrintStmt -> PALABRA_RESERVADA_IMPRIMIY PARENTESIS_ABRE Expression PARENTESIS_CIERRA PUNTO_Y_COMA_TOKEN
-
-
-
-
-IncrementoStmt -> IDENTIFICADOR_TOKEN Incremento
-
-
-
-
+PrintStmt -> PALABRA_RESERVADA_IMPRIMIY PARENTESIS_ABRE PrintArgs PARENTESIS_CIERRA PUNTO_Y_COMA_TOKEN
+PrintArgs -> Expression PrintArgsTail
+PrintArgs -> ''
+PrintArgsTail -> COMA_TOKEN Expression PrintArgsTail
+PrintArgsTail -> ''
 Incremento -> IncrementoOpPlus
 Incremento -> IncrementoOpMinus
-
-
-
-
 IncrementoOpPlus -> OPERADOR_MAS OPERADOR_MAS
 IncrementoOpMinus -> OPERADOR_MENOS OPERADOR_MENOS
-
-
-
-
 Expression -> TermLogico ExpressionPrima
-
-
 ExpressionPrima -> OpcionLogico TermLogico ExpressionPrima
 ExpressionPrima -> ''
-
-
 TermLogico -> TermComparacion TermLogicoConti
-
-
 TermLogicoConti -> OpcionComparacion TermComparacion TermLogicoConti
 TermLogicoConti -> ''
-
-
 TermComparacion -> SumaRestaTerm SumaRestaConti
-
-
 SumaRestaConti -> SumaRestaOp SumaRestaTerm SumaRestaConti
 SumaRestaConti -> ''
-
-
 SumaRestaOp -> OPERADOR_MAS
 SumaRestaOp -> OPERADOR_MENOS
-
-
 SumaRestaTerm -> Factor MulDivModConti
-
-
 MulDivModConti -> MulDivModOp Factor MulDivModConti
 MulDivModConti -> ''
-
-
 MulDivModOp -> OPERADOR_PACHA
 MulDivModOp -> OPERADOR_RAKI
 MulDivModOp -> OPERADOR_MODULO
-
-
 Factor -> OPERADOR_MENOS Unidad
 Factor -> Unidad
-
-
-
-
 Unidad -> PARENTESIS_ABRE Expression PARENTESIS_CIERRA
 Unidad -> ValorUnitario
 Unidad -> Dato
-
-
-
-
 ValorUnitario -> IDENTIFICADOR_TOKEN ValorUnitarioRest
-
-
-
-
 ValorUnitarioRest -> PARENTESIS_ABRE ArgumentosFuncionOpt PARENTESIS_CIERRA
 ValorUnitarioRest -> ''
-
-
-
-
 ArgumentosFuncionOpt -> Expression MasArgumentosFuncion
 ArgumentosFuncionOpt -> ''
-
-
-
-
 MasArgumentosFuncion -> COMA_TOKEN Expression MasArgumentosFuncion
 MasArgumentosFuncion -> ''
-
-
-
-
 Bucle -> ForLoop
-
-
-
-
 ForLoop -> PALABRA_RESERVADA_PARA PARENTESIS_ABRE LoopInitialization PUNTO_Y_COMA_TOKEN ExpressionOpt PUNTO_Y_COMA_TOKEN LoopUpdateOpt PARENTESIS_CIERRA Block
-
-
-
-
 LoopInitialization -> LoopDeclOrAssign
 LoopInitialization -> ''
-
-
-
-
 LoopDeclOrAssign -> DeclaracionVariableSimple
 LoopDeclOrAssign -> AssignmentStmtSimple
-
-
-
-
 DeclaracionVariableSimple -> PALABRA_RESERVADA_VAR IDENTIFICADOR_TOKEN Type OPERADOR_ASIGNACION Expression
-
-
-
-
 AssignmentStmtSimple -> IDENTIFICADOR_TOKEN OPERADOR_ASIGNACION Expression
-
-
-
-
 ExpressionOpt -> Expression
 ExpressionOpt -> ''
-
-
-
-
 LoopUpdateOpt -> IncrementoStmt
 LoopUpdateOpt -> ''
-
-
-
-
+IncrementoStmt -> IDENTIFICADOR_TOKEN Incremento
 Estructura_If -> IfStmt
-
-
-
-
 IfStmt -> PALABRA_RESERVADA_SICHUS PARENTESIS_ABRE Expression PARENTESIS_CIERRA Block ElsePart
-
-
-
-
 ElsePart -> PALABRA_RESERVADA_MANA_SICHUS ArgumentosElseIfOpt Block ElsePart
 ElsePart -> PALABRA_RESERVADA_MANA Block
 ElsePart -> ''
-
-
-
-
 ArgumentosElseIfOpt -> PARENTESIS_ABRE Expression PARENTESIS_CIERRA
 ArgumentosElseIfOpt -> ''
-
-
-
-
 Retorno -> RetornoConValor
 Retorno -> RetornoSinValor
-
-
-
-
 RetornoConValor -> PALABRA_RESERVADA_KUTIPAY Expression PUNTO_Y_COMA_TOKEN
-
-
-
-
 RetornoSinValor -> PALABRA_RESERVADA_PAKIY PUNTO_Y_COMA_TOKEN
-
-
-
-
 Dato -> YUPAY_TOKEN
 Dato -> CHIQI_KAY_TOKEN
 Dato -> CHIQAP_TOKEN_CHIQAQ
 Dato -> CHIQAP_TOKEN_MANA_CHIQAQ
 Dato -> QILLQA_TOKEN
-
-
-
-
 OpcionLogico -> OpcionLogicoWan
 OpcionLogico -> OpcionLogicoUtaq
-
-
-
-
 OpcionLogicoWan -> OPERADOR_LOGICO_WAN
 OpcionLogicoUtaq -> OPERADOR_LOGICO_UTAQ
-
-
-
-
 OpcionComparacion -> OpcionComparacionIgual
 OpcionComparacion -> OpcionComparacionNoIgual
 OpcionComparacion -> OpcionComparacionMenor
 OpcionComparacion -> OpcionComparacionMayor
 OpcionComparacion -> OpcionComparacionMenorIgual
 OpcionComparacion -> OpcionComparacionMayorIgual
-
-
-
-
 OpcionComparacionIgual -> OPERADOR_IGUALDAD
 OpcionComparacionNoIgual -> OPERADOR_MANA_IGUAL
 OpcionComparacionMenor -> OPERADOR_MENOR
 OpcionComparacionMayor -> OPERADOR_MAYOR
 OpcionComparacionMenorIgual -> OPERADOR_MENOR_IGUAL
 OpcionComparacionMayorIgual -> OPERADOR_MAYOR_IGUAL
-
-
-
-
