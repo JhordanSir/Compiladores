@@ -881,7 +881,7 @@ def construir_arbol_sintactico(codigo_fuente_str, ruta_tabla_csv, simbolo_inicia
 
 if __name__ == "__main__":
     tabla_csv_path = "E:\\Compiladores\\Gramática\\tablitaTransiciones.csv"
-    archivo_entrada_path = "E:\\Compiladores\\Inputs\\input2.ws" 
+    archivo_entrada_path = "E:\\Compiladores\\Inputs\\input1.ws" 
     
     codigo_a_parsear = None
     try:

@@ -9,10 +9,15 @@ ruray fact ( yupay : id ) yupay
     { 
         kutipay 1 ; 
     }
-    mana_sichus ( id > 1 ) 
-    { 
-        kutipay id * fact ( id - 1 ) ; 
-    }
+    kutipay id * fact ( id - 1 ) ; 
+}
+
+ruray bool_negation ( chiqap : id , chiqi : id2  ) chiqap 
+{
+    imprimiy ( id ) ;
+    sichus ( id == chiqaq ) { kutipay mana_chiqap ; }
+    mana_sichus ( id != id2 ) { kutipay chiqaq ; }
+    mana { kutipay chiqaq ; }
 }
 
 ruray hatun_ruray ( ) 
@@ -26,26 +31,20 @@ ruray hatun_ruray ( )
     num = 5 ;
     sichus ( num < 5 utaq num > 2)
     {
-        pakiy ;
+        imprimiy (num);
     }
+    var id yupay;
+    var id2 yupay;
     para ( id = 3 ; id < 4 ; id ++ ) 
     { 
-        para ( id = 2 ; id > 0 ; id -- ) 
+        para ( id2 = 1000 ; id2 > 0 ; id2 -- ) 
         { 
             bool = mana_chiqap ; 
             imprimiy ( fact ( num ) * 10 ) ; 
-            imprimiy ( bool_negation ( bool ) ) ;
+            imprimiy ( bool_negation ( bool,bool ) ) ;
             imprimiy ( texto ) ;
+            pakiy ;
         }
-        id = id - 1 ;
     } 
     text = " texto alterado " ; 
 } 
-
-ruray bool_negation ( chiqap : id , chiqi : id2  ) chiqap 
-{
-    imprimiy ( id ) ;
-    sichus ( id == chiqaq ) { kutipay mana_chiqap ; }
-    mana_sichus ( id != id2 ) { kutipay chiqaq ; }
-    mana { kutipay chiqaq ; }
-}
