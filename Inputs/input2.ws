@@ -1,8 +1,18 @@
 # prueba de bucles anidados
 ruray hatun_ruray() {
-    para ( sadfsadfsa = id ; id < id ; id ++ ) { 
-        para ( id = id ; id < id ; id ++ ) { 
-            imprimiy ( "Pavo de MIguel" ) ; 
+    var id yupay = 1;
+    var id2 yupay;
+    # while
+    para ( ; id < 10 ; ) { 
+        # for
+        imprimiy("Posición:");
+        para ( id2 = 1 ; id2 < 10 ; id2 ++ ) { 
+            imprimiy (id); 
+            imprimiy (id2); 
+            sichus (id2 == 5){
+                pakiy;
+            }
         } 
+        id = id+1;
     } 
 }
