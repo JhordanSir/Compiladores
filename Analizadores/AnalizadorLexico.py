@@ -1,5 +1,8 @@
 import ply.lex as lex
 from prettytable import PrettyTable
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 tokens = [
     'YUPAY_TOKEN',
@@ -207,14 +210,10 @@ def analyze_file(filepath):
     return tokens_list
 
 if __name__ == '__main__':
-    example_files = [
-        "E:\\Compiladores\\Inputs\\input1.wasi" 
-    ]
-
-    for filepath in example_files:
-        print(f"\n--- Analizando el archivo: {filepath} ---")
-        tokens_found = analyze_file(filepath)
-        if tokens_found:
-            print(f"Se analizaron {len(tokens_found)} tokens en el archivo '{filepath}'.")
-        else:
-            print(f"No se generaron tokens para el archivo '{filepath}' o hubo un error al leerlo.")
+    archivo_entrada_path = os.path.join(BASE_DIR, "Inputs", "input1.wasi")
+    print(f"\n--- Analizando el archivo: {archivo_entrada_path} ---")
+    tokens_found = analyze_file(archivo_entrada_path)
+    if tokens_found:
+        print(f"Se analizaron {len(tokens_found)} tokens en el archivo '{archivo_entrada_path}'.")
+    else:
+        print(f"No se generaron tokens para el archivo '{archivo_entrada_path}' o hubo un error al leerlo.")

@@ -1,5 +1,8 @@
 import csv
 from collections import defaultdict
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 EPSILON_SYMBOL = "''"
 EPSILON_OUTPUT_STRING = "epsilon"
@@ -212,8 +215,8 @@ def save_table_to_csv_custom_format(parsing_table, ordered_non_terminals, all_te
 
 
 def main():
-    grammar_filepath = "E:\\Compiladores\\Gramática\\GramaticaLL1.bnf" 
-    output_csv_filepath = "E:\\Compiladores\\Gramática\\tablitaTransiciones.csv" 
+    grammar_filepath = os.path.join(BASE_DIR, "Gramática", "GramaticaLL1.bnf")
+    output_csv_filepath = os.path.join(BASE_DIR, "Gramática", "tablitaTransiciones.csv") 
 
     try:
         with open(grammar_filepath, 'r', encoding='utf-8') as f:

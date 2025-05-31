@@ -10,6 +10,8 @@ _CURRENT_FUNCTION_RETURN_VALUE = None
 _IS_RETURNING = False
 _IS_BREAKING_LOOP = False 
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 class Symbol:
     def __init__(self, name, data_type, scope_name, line_declared, symbol_type="variable", params=None, value=None):
         self.name = name
@@ -880,8 +882,8 @@ def construir_arbol_sintactico(codigo_fuente_str, ruta_tabla_csv, simbolo_inicia
     return arbol_sintactico_raiz
 
 if __name__ == "__main__":
-    tabla_csv_path = "E:\\Compiladores\\Gramática\\tablitaTransiciones.csv"
-    archivo_entrada_path = "E:\\Compiladores\\Inputs\\input1.wasi" 
+    tabla_csv_path = os.path.join(BASE_DIR, "Gramática", "tablitaTransiciones.csv")
+    archivo_entrada_path = os.path.join(BASE_DIR, "Inputs", "input1.wasi")
     
     codigo_a_parsear = None
     try:

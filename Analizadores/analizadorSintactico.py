@@ -1,6 +1,10 @@
 import csv
 import ply.lex as lex
 from AnalizadorLexico import analyze_file
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 class Nodo:
     def __init__(self, valor, token_original=None):  
         self.valor = valor
@@ -247,9 +251,14 @@ def exportar_arbol_a_graphviz(raiz, nombre_archivo="arbol_parseo.dot"):
         archivo.write("}\n")
     print(f"Árbol exportado a '{nombre_archivo}'. Puedes visualizarlo con Graphviz (ej: dot -Tpng {nombre_archivo} -o arbol.png)")
 
+# ...existing code...
+
 if __name__ == '__main__':
-    tabla_csv_path = "E:\\Compiladores\\Gramática\\tablitaTransiciones.csv"
-    archivo_entrada_path = "E:\\Compiladores\\Inputs\\input1.wasi"
+    tabla_csv_path = os.path.join(BASE_DIR, "Gramática", "tablitaTransiciones.csv")
+    archivo_entrada_path = os.path.join(BASE_DIR, "Inputs", "input1.wasi")
+    archivo_salida_graphviz = os.path.join(BASE_DIR, "Salida Graphviz", "arbol_parseo.txt")
+
+    os.makedirs(os.path.dirname(archivo_salida_graphviz), exist_ok=True)
 
     print(f"--- Cargando tabla de parsing desde: {tabla_csv_path} ---")
     tabla_parsing = cargar_tabla_desde_csv(tabla_csv_path)
@@ -270,7 +279,7 @@ if __name__ == '__main__':
                 print("\n\nEstructura del árbol sintáctico:")
                 imprimir_arbol(arbol_sintactico)
 
-                exportar_arbol_a_graphviz(arbol_sintactico, "E:\\Compiladores\\Salida Graphviz\\arbol_parseo.txt")
+                exportar_arbol_a_graphviz(arbol_sintactico, archivo_salida_graphviz)
             else:
                 print("\n❌ Entrada rechazada por el analizador sintáctico.")
         else:
