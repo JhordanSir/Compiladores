@@ -1,0 +1,8 @@
+digraph G {
+    graph [bgcolor="#f0f0f0", fontname="Helvetica"];
+    node [shape=ellipse, style=filled, fillcolor="#ffcccc", color="#d12b2b", fontname="Helvetica", penwidth=2];
+    edge [color="#d12b2b", penwidth=2];
+    node_1771421058064 [label="hatun_ruray"];
+    node_1771421058064 -> node_1771421058000;
+    node_1771421058000 [label="factorial(5)"];
+}

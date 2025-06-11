@@ -1,18 +1,26 @@
-# prueba de variables globales y locales
-
-var global qillqa = "Hola Mundo";
-
-ruray Suma ( chiqi : arg1 , chiqi : arg2 ) chiqi {
-    var sum chiqi = arg1 + arg2;
-    kutipay sum;
+ruray esPar(yupay: n) chiqap {
+    sichus (n % 2 == 0){
+        kutipay chiqaq;
+    }
+    kutipay mana_chiqap;
 }
-
+ruray dividir (yupay : n) yupay {
+    sichus (esPar(n)){
+        imprimiy(n);
+        kutipay dividir(n/2);
+    }
+    mana_sichus (n <= 1){
+        imprimiy(n);
+        kutipay n;
+    }
+    mana_sichus{
+        imprimiy(n);
+        kutipay dividir(n-1);
+    }
+}
 ruray hatun_ruray ( ) {
-    var y chiqi = 10.5;
-    var z chiqi = 6;
-    z=16;
-    var x chiqi = Suma (y , z) ;
-    imprimiy ( Suma (y , z) ) ;
-    global = "Miguel";
-    
+    var x yupay = 5;
+    var y yupay;
+    y=dividir(x);
+    imprimiy("Resultado: ", y);
 }

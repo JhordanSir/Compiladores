@@ -210,7 +210,7 @@ def analyze_file(filepath):
     return tokens_list
 
 if __name__ == '__main__':
-    archivo_entrada_path = os.path.join(BASE_DIR, "Inputs", "input1.wasi")
+    archivo_entrada_path = os.path.join(BASE_DIR, "Inputs", "input2.wasi")
     print(f"\n--- Analizando el archivo: {archivo_entrada_path} ---")
     tokens_found = analyze_file(archivo_entrada_path)
     if tokens_found:

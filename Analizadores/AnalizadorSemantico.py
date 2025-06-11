@@ -12,6 +12,67 @@ _IS_BREAKING_LOOP = False
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+class ActivationNode:
+    def __init__(self, name, parent=None, args=None):
+        self.name = name
+        self.parent = parent
+        self.children = []
+        self.args = args if args is not None else []
+        self.id = f"node_{id(self)}"
+
+class ActivationTreeBuilder:
+    def __init__(self):
+        self.root = None
+        self.current_node = None
+
+    def enter_function(self, name, args):
+        new_node = ActivationNode(name, parent=self.current_node, args=args)
+        if self.root is None:
+            self.root = new_node
+        
+        if self.current_node:
+            self.current_node.children.append(new_node)
+        
+        self.current_node = new_node
+
+    def exit_function(self):
+        if self.current_node:
+            self.current_node = self.current_node.parent
+
+    def to_graphviz(self):
+        if not self.root:
+            return "digraph G {}"
+        
+        dot_lines = [
+            "digraph G {",
+            '    graph [bgcolor="#f0f0f0", fontname="Helvetica"];',
+            '    node [shape=ellipse, style=filled, fillcolor="#ffcccc", color="#d12b2b", fontname="Helvetica", penwidth=2];',
+            '    edge [color="#d12b2b", penwidth=2];'
+        ]
+        
+        def build_dot_recursive(node):
+            arg_list_str = []
+            for arg in node.args:
+                if isinstance(arg, str):
+                    arg_list_str.append(f'"{arg}"')
+                else:
+                    arg_list_str.append(str(arg))
+            arg_str = ', '.join(arg_list_str)
+
+            label = f"{node.name}({arg_str})"
+            if node.name == "hatun_ruray" and not node.args:
+                label = "hatun_ruray"
+
+            dot_lines.append(f'    {node.id} [label="{label}"];')
+            
+            for child in node.children:
+                dot_lines.append(f'    {node.id} -> {child.id};')
+                build_dot_recursive(child)
+        
+        build_dot_recursive(self.root)
+        dot_lines.append("}")
+        return "\n".join(dot_lines)
+
 class Symbol:
     def __init__(self, name, data_type, scope_name, line_declared, symbol_type="variable", params=None, value=None):
         self.name = name
@@ -64,14 +125,11 @@ class ScopeManager:
         self.scope_stack.append(scope_name)
         self.current_scope_name = scope_name
 
-
     def exit_scope(self):
         if len(self.scope_stack) > 1:
             exited_scope_name = self.scope_stack.pop()
             self.current_scope_name = self.scope_stack[-1]
-            
             self.symbol_table_history.append(copy.deepcopy(self.symbol_table))
-
             if exited_scope_name != "global": 
                 for sym in self.symbol_table:
                     if sym.scope_name == exited_scope_name:
@@ -198,12 +256,12 @@ def get_literal_value_from_dato_node(dato_node, scope_manager, line_num):
     scope_manager.log_error(f"Error Semántico (Línea {line_num}): Tipo de dato literal desconocido o malformado.")
     return None
 
-def evaluate_expression(expression_node, scope_manager):
+def evaluate_expression(expression_node, scope_manager, tree_builder):
     if not expression_node or expression_node.valor != 'Expression':
         scope_manager.log_error(f"Error Interno: evaluate_expression llamado con nodo inválido: {expression_node.valor if expression_node else 'None'}")
         return "<expresión inválida>"
     
-    val1 = evaluate_term_logico(expression_node.hijos[0], scope_manager)
+    val1 = evaluate_term_logico(expression_node.hijos[0], scope_manager, tree_builder)
 
     expression_prima_node = expression_node.hijos[1]
     if expression_prima_node.hijos and expression_prima_node.hijos[0].valor != 'epsilon_node':
@@ -212,7 +270,7 @@ def evaluate_expression(expression_node, scope_manager):
             op_logico_node = current_expr_prima_node.hijos[0] 
             term_logico2_node = current_expr_prima_node.hijos[1]
             
-            val2 = evaluate_term_logico(term_logico2_node, scope_manager)
+            val2 = evaluate_term_logico(term_logico2_node, scope_manager, tree_builder)
 
             if not isinstance(val1, bool) or not isinstance(val2, bool):
                 line = get_node_line(op_logico_node)
@@ -231,9 +289,8 @@ def evaluate_expression(expression_node, scope_manager):
             current_expr_prima_node = current_expr_prima_node.hijos[2] 
     return val1
 
-
-def evaluate_term_logico(term_logico_node, scope_manager):
-    val1 = evaluate_term_comparacion(term_logico_node.hijos[0], scope_manager)
+def evaluate_term_logico(term_logico_node, scope_manager, tree_builder):
+    val1 = evaluate_term_comparacion(term_logico_node.hijos[0], scope_manager, tree_builder)
 
     term_logico_conti_node = term_logico_node.hijos[1]
     if term_logico_conti_node.hijos and term_logico_conti_node.hijos[0].valor != 'epsilon_node':
@@ -242,7 +299,7 @@ def evaluate_term_logico(term_logico_node, scope_manager):
             op_comp_node = current_term_logico_conti_node.hijos[0] 
             term_comp2_node = current_term_logico_conti_node.hijos[1]
 
-            val2 = evaluate_term_comparacion(term_comp2_node, scope_manager)
+            val2 = evaluate_term_comparacion(term_comp2_node, scope_manager, tree_builder)
             
             op_type_node = op_comp_node.hijos[0] 
             op_type = op_type_node.hijos[0].valor 
@@ -255,7 +312,7 @@ def evaluate_term_logico(term_logico_node, scope_manager):
             try:
                 if op_type == 'OPERADOR_IGUALDAD': val1 = val1 == val2 
                 elif op_type == 'OPERADOR_MANA_IGUAL': val1 = val1 != val2
-                else: # Operadores de orden
+                else: 
                     if not (isinstance(val1, (int, float, str)) and isinstance(val2, (int, float, str))):
                         line = get_node_line(op_comp_node)
                         scope_manager.log_error(f"Error Semántico (Línea {line}): Operadores de orden solo aplican a números o strings, no a '{type(val1).__name__}' y '{type(val2).__name__}'.")
@@ -275,8 +332,8 @@ def evaluate_term_logico(term_logico_node, scope_manager):
             current_term_logico_conti_node = current_term_logico_conti_node.hijos[2] 
     return val1
 
-def evaluate_term_comparacion(term_comparacion_node, scope_manager):
-    current_value = evaluate_sumaresta_term(term_comparacion_node.hijos[0], scope_manager)
+def evaluate_term_comparacion(term_comparacion_node, scope_manager, tree_builder):
+    current_value = evaluate_sumaresta_term(term_comparacion_node.hijos[0], scope_manager, tree_builder)
     
     next_sumaresta_conti_node = term_comparacion_node.hijos[1]
     while next_sumaresta_conti_node.hijos and next_sumaresta_conti_node.hijos[0].valor != 'epsilon_node':
@@ -284,7 +341,7 @@ def evaluate_term_comparacion(term_comparacion_node, scope_manager):
         term_node = next_sumaresta_conti_node.hijos[1]     
         next_sumaresta_conti_node = next_sumaresta_conti_node.hijos[2] 
 
-        next_value = evaluate_sumaresta_term(term_node, scope_manager)
+        next_value = evaluate_sumaresta_term(term_node, scope_manager, tree_builder)
         operator = op_node.hijos[0].valor 
 
         if operator == 'OPERADOR_MAS':
@@ -311,8 +368,8 @@ def evaluate_term_comparacion(term_comparacion_node, scope_manager):
             
     return current_value
 
-def evaluate_sumaresta_term(sumaresta_term_node, scope_manager):
-    current_value = evaluate_factor(sumaresta_term_node.hijos[0], scope_manager)
+def evaluate_sumaresta_term(sumaresta_term_node, scope_manager, tree_builder):
+    current_value = evaluate_factor(sumaresta_term_node.hijos[0], scope_manager, tree_builder)
 
     next_muldivmod_conti_node = sumaresta_term_node.hijos[1]
     while next_muldivmod_conti_node.hijos and next_muldivmod_conti_node.hijos[0].valor != 'epsilon_node':
@@ -320,7 +377,7 @@ def evaluate_sumaresta_term(sumaresta_term_node, scope_manager):
         factor_node = next_muldivmod_conti_node.hijos[1] 
         next_muldivmod_conti_node = next_muldivmod_conti_node.hijos[2]
 
-        next_value = evaluate_factor(factor_node, scope_manager)
+        next_value = evaluate_factor(factor_node, scope_manager, tree_builder)
         operator = op_node.hijos[0].valor 
 
         if not (isinstance(current_value, (int, float)) and isinstance(next_value, (int, float))):
@@ -343,7 +400,7 @@ def evaluate_sumaresta_term(sumaresta_term_node, scope_manager):
             return "<error de operador en mul/div/mod>"
     return current_value
 
-def evaluate_factor(factor_node, scope_manager):
+def evaluate_factor(factor_node, scope_manager, tree_builder):
     is_negative = False
     actual_node_to_eval = factor_node.hijos[0]
     
@@ -351,7 +408,7 @@ def evaluate_factor(factor_node, scope_manager):
         is_negative = True
         actual_node_to_eval = factor_node.hijos[1]
         
-    value = evaluate_unidad(actual_node_to_eval, scope_manager)
+    value = evaluate_unidad(actual_node_to_eval, scope_manager, tree_builder)
 
     if is_negative:
         if not isinstance(value, (int, float)):
@@ -360,7 +417,7 @@ def evaluate_factor(factor_node, scope_manager):
         return -value
     return value
 
-def evaluate_unidad(unidad_node, scope_manager):
+def evaluate_unidad(unidad_node, scope_manager, tree_builder):
     child = unidad_node.hijos[0]
     line_num = get_node_line(unidad_node)
 
@@ -374,7 +431,7 @@ def evaluate_unidad(unidad_node, scope_manager):
         valor_unitario_rest_node = child.hijos[1]
 
         if valor_unitario_rest_node.hijos and valor_unitario_rest_node.hijos[0].valor == 'PARENTESIS_ABRE':
-            return execute_function_call(identifier_name, valor_unitario_rest_node, scope_manager, line_num_id)
+            return execute_function_call(identifier_name, valor_unitario_rest_node, scope_manager, line_num_id, tree_builder)
         else: 
             symbol = scope_manager.lookup_symbol(identifier_name, line_num_id)
             if symbol:
@@ -385,12 +442,12 @@ def evaluate_unidad(unidad_node, scope_manager):
             return f"<variable '{identifier_name}' no declarada>"
 
     elif child.valor == 'PARENTESIS_ABRE':
-        return evaluate_expression(unidad_node.hijos[1], scope_manager)
+        return evaluate_expression(unidad_node.hijos[1], scope_manager, tree_builder)
     
     scope_manager.log_error(f"Error Semántico (Línea {line_num}): No se pudo evaluar el nodo Unidad '{child.valor}'.")
     return "<error en Unidad>"
 
-def execute_function_call(func_name, valor_unitario_rest_node, scope_manager, line_call):
+def execute_function_call(func_name, valor_unitario_rest_node, scope_manager, line_call, tree_builder):
     global _CURRENT_FUNCTION_RETURN_VALUE, _IS_RETURNING 
     
     func_symbol = scope_manager.lookup_symbol(func_name, line_call)
@@ -400,13 +457,13 @@ def execute_function_call(func_name, valor_unitario_rest_node, scope_manager, li
         return f"<'{func_name}' no es función>"
 
     arg_values = []
-    if len(valor_unitario_rest_node.hijos) > 1 and valor_unitario_rest_node.hijos[1].valor == 'ArgumentosFuncionOpt':
+    if valor_unitario_rest_node and len(valor_unitario_rest_node.hijos) > 1 and valor_unitario_rest_node.hijos[1].valor == 'ArgumentosFuncionOpt':
         argumentos_funcion_opt_node = valor_unitario_rest_node.hijos[1]
         if argumentos_funcion_opt_node.hijos and argumentos_funcion_opt_node.hijos[0].valor != 'epsilon_node':
             current_expr_node = argumentos_funcion_opt_node.hijos[0]
             mas_args_node = argumentos_funcion_opt_node.hijos[1]
             while True:
-                arg_val = evaluate_expression(current_expr_node, scope_manager)
+                arg_val = evaluate_expression(current_expr_node, scope_manager, tree_builder)
                 arg_values.append(arg_val)
                 if mas_args_node.hijos and mas_args_node.hijos[0].valor != 'epsilon_node':
                     current_expr_node = mas_args_node.hijos[1]
@@ -420,33 +477,45 @@ def execute_function_call(func_name, valor_unitario_rest_node, scope_manager, li
     if not func_symbol.ast_node:
         scope_manager.log_error(f"Error Interno: No se encontró el AST para la función '{func_name}'.")
         return f"<error AST func '{func_name}'>"
+    
+    tree_builder.enter_function(func_name, arg_values)
+    
+    returned_value_from_this_call = None
+    try:
+        outer_is_returning = _IS_RETURNING
+        outer_return_value = _CURRENT_FUNCTION_RETURN_VALUE
+
+        _IS_RETURNING = False 
+        _CURRENT_FUNCTION_RETURN_VALUE = None
+
+        function_scope_name = f"func_call_{func_name}_{line_call}_{len(scope_manager.scope_stack)}"
+        scope_manager.enter_scope(function_scope_name)
+
+        for i, param_info in enumerate(func_symbol.params):
+            arg_value_coerced = arg_values[i]
+            if param_info['type'] == 'yupay' and isinstance(arg_value_coerced, float):
+                arg_value_coerced = int(arg_value_coerced)
+            scope_manager.add_symbol(param_info['name'], param_info['type'], param_info['line'], 
+                                    symbol_type="parametro", value=arg_value_coerced)
         
-    outer_is_returning = _IS_RETURNING
-    outer_return_value = _CURRENT_FUNCTION_RETURN_VALUE
+        analizar_semantica_y_construir_tabla_simbolos(func_symbol.ast_node, scope_manager, tree_builder, is_function_execution=True)
 
-    _IS_RETURNING = False 
-    _CURRENT_FUNCTION_RETURN_VALUE = None
+        if not _IS_RETURNING and func_symbol.data_type != "void":
+            scope_manager.log_error(f"Error Semántico (Línea {line_call}): La función '{func_name}' debe retornar un valor de tipo '{func_symbol.data_type}', pero puede terminar sin una instrucción 'kutipay'.")
 
-    function_scope_name = f"func_call_{func_name}_{line_call}_{len(scope_manager.scope_stack)}"
-    scope_manager.enter_scope(function_scope_name)
-
-    for i, param_info in enumerate(func_symbol.params):
-        scope_manager.add_symbol(param_info['name'], param_info['type'], param_info['line'], 
-                                 symbol_type="parametro", value=arg_values[i])
+        returned_value_from_this_call = _CURRENT_FUNCTION_RETURN_VALUE 
+        
+        scope_manager.exit_scope() 
+        
+        _IS_RETURNING = outer_is_returning
+        _CURRENT_FUNCTION_RETURN_VALUE = outer_return_value
     
-    analizar_semantica_y_construir_tabla_simbolos(func_symbol.ast_node, scope_manager, is_function_execution=True)
-
-    returned_value_from_this_call = _CURRENT_FUNCTION_RETURN_VALUE 
-    
-    scope_manager.exit_scope() 
-    
-    _IS_RETURNING = outer_is_returning
-    _CURRENT_FUNCTION_RETURN_VALUE = outer_return_value
+    finally:
+        tree_builder.exit_function()
     
     return returned_value_from_this_call
 
-def analizar_semantica_y_construir_tabla_simbolos(nodo_raiz, scope_manager, 
-                                               is_function_execution=False): 
+def analizar_semantica_y_construir_tabla_simbolos(nodo_raiz, scope_manager, tree_builder, is_function_execution=False): 
     if nodo_raiz is None:
         return
 
@@ -503,53 +572,44 @@ def analizar_semantica_y_construir_tabla_simbolos(nodo_raiz, scope_manager,
         if (_IS_RETURNING and is_function_execution): return
         if (_IS_BREAKING_LOOP and scope_manager.is_inside_loop()): return
 
-
         node_type = node.valor
 
         if node_type == 'Program':
             for hijo in node.hijos: visit_node_recursive(hijo)
 
         elif node_type == 'DefinitionList':
-            if not node.hijos or (len(node.hijos) == 1 and node.hijos[0].valor == 'epsilon_node'): return
-            
-            first_child_node = node.hijos[0]
-            if first_child_node.valor == 'PALABRA_RESERVADA_RURAY': 
-                visit_node_recursive(node.hijos[1]) 
-                if (_IS_RETURNING and is_function_execution) or \
-                   (_IS_BREAKING_LOOP and scope_manager.is_inside_loop()): return
-                visit_node_recursive(node.hijos[2]) 
-            elif first_child_node.valor == 'PALABRA_RESERVADA_VAR': 
+            if not node.hijos or (len(node.hijos) == 1 and node.hijos[0].valor == 'epsilon_node'):
+                return
+            first_child_valor = node.hijos[0].valor
+            if first_child_valor == 'PALABRA_RESERVADA_RURAY':
+                one_definition_node = node.hijos[1]
+                visit_node_recursive(one_definition_node)
+                next_definition_list_node = node.hijos[2]
+                visit_node_recursive(next_definition_list_node)
+            elif first_child_valor == 'PALABRA_RESERVADA_VAR':
                 identificador_node = node.hijos[1]
                 type_container_node = node.hijos[2]
                 inicializacion_opt_node = node.hijos[3]
-                
                 variable_name = get_node_value(identificador_node)
                 data_type_str = extract_data_type_from_type_node(type_container_node)
                 linea_declaracion = get_node_line(identificador_node)
                 initial_value = None
-
-                if inicializacion_opt_node.valor == 'InicializacionOpt' and inicializacion_opt_node.hijos and \
-                   len(inicializacion_opt_node.hijos) == 2 and inicializacion_opt_node.hijos[1].valor == 'Expression':
-                    expression_node_for_init = inicializacion_opt_node.hijos[1]
-                    initial_value = evaluate_expression(expression_node_for_init, scope_manager)
-                
+                if inicializacion_opt_node.hijos and inicializacion_opt_node.hijos[0].valor != 'epsilon_node':
+                    expression_node = inicializacion_opt_node.hijos[1]
+                    initial_value = evaluate_expression(expression_node, scope_manager, tree_builder)
+                    if data_type_str == 'yupay' and isinstance(initial_value, float):
+                        initial_value = int(initial_value)
                 scope_manager.add_symbol(variable_name, data_type_str, linea_declaracion, 
                                          symbol_type="variable", value=initial_value)
-                if (_IS_RETURNING and is_function_execution) or \
-                   (_IS_BREAKING_LOOP and scope_manager.is_inside_loop()): return
-                visit_node_recursive(node.hijos[5]) 
-            else: 
-                for hijo in node.hijos: visit_node_recursive(hijo)
-
+                next_definition_list_node = node.hijos[5]
+                visit_node_recursive(next_definition_list_node)
 
         elif node_type == 'OneDefinition':
             nombre_funcion, linea_decl_func, tipo_retorno_str = "err", "N/A", "void"
             parametros_decl_node, block_node, es_hatun_ruray = None, None, False
             param_details_list = [] 
-
             if not node.hijos: return
             first_child_of_onedef = node.hijos[0]
-
             if first_child_of_onedef.valor == 'IDENTIFICADOR_TOKEN':
                 nombre_funcion_node = first_child_of_onedef
                 nombre_funcion = get_node_value(nombre_funcion_node)
@@ -565,7 +625,6 @@ def analizar_semantica_y_construir_tabla_simbolos(nodo_raiz, scope_manager,
                     else: 
                         tipo_retorno_str = "void" 
                 else: scope_manager.log_error(f"Error AST (Línea {get_node_line(node)}): Estructura OneDefinition (normal) inválida.")
-            
             elif first_child_of_onedef.valor == 'HATUN_RURAY_TOKEN':
                 nombre_funcion = "hatun_ruray"
                 es_hatun_ruray = True
@@ -576,24 +635,15 @@ def analizar_semantica_y_construir_tabla_simbolos(nodo_raiz, scope_manager,
                      parametros_decl_node = Nodo('ParamListOpt') 
                      parametros_decl_node.agregar_hijo(Nodo('epsilon_node'))
                 else: scope_manager.log_error(f"Error AST (Línea {get_node_line(node)}): Estructura OneDefinition (hatun_ruray) inválida.")
-            
             else: 
                 for hijo in node.hijos: visit_node_recursive(hijo)
                 return
-
             if parametros_decl_node and parametros_decl_node.valor == 'ParamListOpt' and \
                parametros_decl_node.hijos and parametros_decl_node.hijos[0].valor == 'ParamList':
                 param_details_list = extract_param_details_from_param_list(parametros_decl_node.hijos[0])
-
             scope_manager.add_symbol(nombre_funcion, tipo_retorno_str, linea_decl_func, 
                                      symbol_type="funcion", params=param_details_list,
                                      ast_node=block_node, param_list_ast_node=parametros_decl_node)
-            
-            if es_hatun_ruray and not is_function_execution: 
-                scope_manager.enter_scope("hatun_ruray_exec") 
-                if block_node: visit_node_recursive(block_node) 
-                scope_manager.exit_scope() 
-
 
         elif node_type == 'Block':
             if node.hijos and len(node.hijos) > 1: 
@@ -607,35 +657,70 @@ def analizar_semantica_y_construir_tabla_simbolos(nodo_raiz, scope_manager,
                 visit_node_recursive(node.hijos[1]) 
         
         elif node_type == 'DeclaracionVariable': 
-            if len(node.hijos) == 5:
+            if len(node.hijos) >= 5:
                 identificador_node = node.hijos[1]
                 type_container_node = node.hijos[2]
                 inicializacion_opt_node = node.hijos[3]
-                
                 variable_name = get_node_value(identificador_node)
                 data_type_str = extract_data_type_from_type_node(type_container_node)
                 linea_declaracion = get_node_line(identificador_node)
                 initial_value = None 
-
                 if inicializacion_opt_node.valor == 'InicializacionOpt' and inicializacion_opt_node.hijos and \
                    len(inicializacion_opt_node.hijos) == 2 and inicializacion_opt_node.hijos[1].valor == 'Expression':
                     expression_node_for_init = inicializacion_opt_node.hijos[1]
-                    initial_value = evaluate_expression(expression_node_for_init, scope_manager)
-                
+                    initial_value = evaluate_expression(expression_node_for_init, scope_manager, tree_builder)
+                    if data_type_str == 'yupay' and isinstance(initial_value, float):
+                        initial_value = int(initial_value) 
+                    type_of_value = type(initial_value).__name__
+                    is_compatible = False
+                    if data_type_str == 'yupay' and isinstance(initial_value, int): is_compatible = True
+                    elif data_type_str == 'chiqi' and isinstance(initial_value, (int, float)): is_compatible = True
+                    elif data_type_str == 'qillqa' and isinstance(initial_value, str): is_compatible = True
+                    elif data_type_str == 'chiqap' and isinstance(initial_value, bool): is_compatible = True
+                    if not is_compatible:
+                        scope_manager.log_error(f"Error Semántico (Línea {linea_declaracion}): Incompatibilidad de tipos. No se puede asignar un valor de tipo '{type_of_value}' a una variable de tipo '{data_type_str}'.")
                 scope_manager.add_symbol(variable_name, data_type_str, linea_declaracion, 
                                          symbol_type="variable", value=initial_value)
             else: scope_manager.log_error(f"Error AST (Línea {get_node_line(node)}): Estructura DeclaracionVariable inválida.")
 
-        elif node_type == 'AssignmentStmt':
-            if len(node.hijos) == 4:
-                identificador_node = node.hijos[0]
-                expression_node = node.hijos[2]
-                var_name = get_node_value(identificador_node)
-                linea_uso = get_node_line(identificador_node)
-                
-                assigned_value = evaluate_expression(expression_node, scope_manager)
-                scope_manager.update_symbol_value(var_name, assigned_value, linea_uso)
-            else: scope_manager.log_error(f"Error AST (Línea {get_node_line(node)}): Estructura AssignmentStmt inválida.")
+        elif node_type == 'IdBasedStmt':
+            identificador_node = node.hijos[0]
+            rest_node = node.hijos[1]
+            var_name = get_node_value(identificador_node)
+            linea = get_node_line(identificador_node)
+            rest_first_child = rest_node.hijos[0]
+            if rest_first_child.valor == 'OPERADOR_ASIGNACION':
+                symbol = scope_manager.lookup_symbol(var_name, linea)
+                if not symbol: return
+                expression_node = rest_node.hijos[1]
+                assigned_value = evaluate_expression(expression_node, scope_manager, tree_builder)
+                if symbol.data_type == 'yupay' and isinstance(assigned_value, float):
+                    assigned_value = int(assigned_value) 
+                type_of_value = type(assigned_value).__name__
+                is_compatible = False
+                if symbol.data_type == 'yupay' and isinstance(assigned_value, int): is_compatible = True
+                elif symbol.data_type == 'chiqi' and isinstance(assigned_value, (int, float)): is_compatible = True
+                elif symbol.data_type == 'qillqa' and isinstance(assigned_value, str): is_compatible = True
+                elif symbol.data_type == 'chiqap' and isinstance(assigned_value, bool): is_compatible = True
+                if not is_compatible:
+                    scope_manager.log_error(f"Error Semántico (Línea {linea}): Incompatibilidad de tipos. No se puede asignar un valor de tipo '{type_of_value}' a la variable '{var_name}' de tipo '{symbol.data_type}'.")
+                else:
+                    scope_manager.update_symbol_value(var_name, assigned_value, linea)
+            elif rest_first_child.valor == 'Incremento':
+                symbol = scope_manager.lookup_symbol(var_name, linea)
+                if not symbol: return
+                op_node = rest_first_child.hijos[0]
+                if not isinstance(symbol.value, (int, float)):
+                    scope_manager.log_error(f"Error Semántico (Línea {linea}): El operador '++' o '--' solo se puede aplicar a yupay o chiqi, no a '{symbol.data_type}'.")
+                    return
+                new_value = symbol.value
+                if op_node.valor == 'IncrementoOpPlus':
+                    new_value += 1
+                elif op_node.valor == 'IncrementoOpMinus':
+                    new_value -= 1
+                scope_manager.update_symbol_value(var_name, new_value, linea)
+            elif rest_first_child.valor == 'PARENTESIS_ABRE':
+                execute_function_call(var_name, rest_node, scope_manager, linea, tree_builder)
 
         elif node_type == 'RetornoConValor': 
             if not is_function_execution:
@@ -643,7 +728,7 @@ def analizar_semantica_y_construir_tabla_simbolos(nodo_raiz, scope_manager,
             else:
                 if len(node.hijos) == 3 and node.hijos[1].valor == 'Expression':
                     expression_node = node.hijos[1]
-                    return_value = evaluate_expression(expression_node, scope_manager)
+                    return_value = evaluate_expression(expression_node, scope_manager, tree_builder)
                     _CURRENT_FUNCTION_RETURN_VALUE = return_value
                     _IS_RETURNING = True
                 else: scope_manager.log_error(f"Error AST (Línea {get_node_line(node)}): Estructura RetornoConValor inválida.")
@@ -657,23 +742,35 @@ def analizar_semantica_y_construir_tabla_simbolos(nodo_raiz, scope_manager,
             else:
                  scope_manager.log_error(f"Error Semántico (Línea {get_node_line(node)}): 'pakiy' fuera de una función o bucle.")
         
-        elif node_type == 'PrintStmt': 
-            if len(node.hijos) == 5 and node.hijos[2].valor == 'Expression':
-                value_to_print = evaluate_expression(node.hijos[2], scope_manager)
-                if isinstance(value_to_print, bool):
-                    print("chiqaq" if value_to_print else "mana_chiqap")
+        elif node_type == 'PrintStmt':
+            argument_list_opt_node = node.hijos[2]
+            values_to_print = []
+            if argument_list_opt_node.hijos and argument_list_opt_node.hijos[0].valor != 'epsilon_node':
+                current_expression_node = argument_list_opt_node.hijos[0]
+                current_tail_node = argument_list_opt_node.hijos[1]
+                while True:
+                    value = evaluate_expression(current_expression_node, scope_manager, tree_builder)
+                    values_to_print.append(value)
+                    if current_tail_node.hijos and current_tail_node.hijos[0].valor != 'epsilon_node':
+                        current_expression_node = current_tail_node.hijos[1]
+                        current_tail_node = current_tail_node.hijos[2]
+                    else:
+                        break
+            output_str = []
+            for val in values_to_print:
+                if isinstance(val, bool):
+                    output_str.append("chiqaq" if val else "mana_chiqap")
+                elif val is None:
+                    output_str.append("nulo")
                 else:
-                    print(value_to_print)
-            else:
-                scope_manager.log_error(f"Error AST (Línea {get_node_line(node)}): Estructura PrintStmt inválida.")
-                for hijo in node.hijos: visit_node_recursive(hijo)
-        
+                    output_str.append(str(val))
+            print(" ".join(output_str))
+
         elif node_type == 'IfStmt':
             condition_node = node.hijos[2]
             block_node = node.hijos[4]
             else_part_node = node.hijos[5]
-
-            condition_value = evaluate_expression(condition_node, scope_manager)
+            condition_value = evaluate_expression(condition_node, scope_manager, tree_builder)
             if not isinstance(condition_value, bool):
                 scope_manager.log_error(f"Error Semántico (Línea {get_node_line(condition_node)}): La condición del 'sichus' debe ser booleana, se obtuvo '{type(condition_value).__name__}'.")
             else:
@@ -695,16 +792,13 @@ def analizar_semantica_y_construir_tabla_simbolos(nodo_raiz, scope_manager,
                     args_elseif_opt_node = node.hijos[1]
                     elseif_block_node = node.hijos[2]
                     next_else_part_node = node.hijos[3]
-                    
                     condition_value_elseif = True 
                     if args_elseif_opt_node.hijos and args_elseif_opt_node.hijos[0].valor != 'epsilon_node':
-                        
                         elseif_condition_node = args_elseif_opt_node.hijos[1]
-                        condition_value_elseif = evaluate_expression(elseif_condition_node, scope_manager)
+                        condition_value_elseif = evaluate_expression(elseif_condition_node, scope_manager, tree_builder)
                         if not isinstance(condition_value_elseif, bool):
                              scope_manager.log_error(f"Error Semántico (Línea {get_node_line(elseif_condition_node)}): La condición del 'mana_sichus' debe ser booleana.")
                              condition_value_elseif = False 
-
                     if condition_value_elseif:
                         scope_manager.enter_scope("elseif_block")
                         visit_node_recursive(elseif_block_node)
@@ -717,40 +811,30 @@ def analizar_semantica_y_construir_tabla_simbolos(nodo_raiz, scope_manager,
             condition_opt_node = node.hijos[4] 
             update_opt_node = node.hijos[6]
             loop_block_node = node.hijos[8]
-
             outer_is_breaking = _IS_BREAKING_LOOP 
-
             scope_manager.enter_loop()
-            
             if init_node.hijos and init_node.hijos[0].valor != 'epsilon_node':
                 visit_node_recursive(init_node) 
-
             _IS_BREAKING_LOOP = False 
-
             while True:
                 condition_value = True 
                 if condition_opt_node.hijos and condition_opt_node.hijos[0].valor != 'epsilon_node':
                     condition_node = condition_opt_node.hijos[0]
-                    condition_value = evaluate_expression(condition_node, scope_manager)
+                    condition_value = evaluate_expression(condition_node, scope_manager, tree_builder)
                     if not isinstance(condition_value, bool):
                         scope_manager.log_error(f"Error Semántico (Línea {get_node_line(condition_node)}): La condición del bucle 'para' debe ser booleana.")
                         break 
-
                 if not condition_value:
                     break 
-
                 visit_node_recursive(loop_block_node) 
-
                 if _IS_BREAKING_LOOP:
                     break 
                 if _IS_RETURNING and is_function_execution: 
                     scope_manager.exit_loop()
                     _IS_BREAKING_LOOP = outer_is_breaking 
                     return 
-
                 if update_opt_node.hijos and update_opt_node.hijos[0].valor != 'epsilon_node':
                     visit_node_recursive(update_opt_node) 
-
             scope_manager.exit_loop() 
             _IS_BREAKING_LOOP = outer_is_breaking
 
@@ -762,11 +846,20 @@ def analizar_semantica_y_construir_tabla_simbolos(nodo_raiz, scope_manager,
             identificador_node = node.hijos[1]
             type_container_node = node.hijos[2]
             expression_node = node.hijos[4]
-            
             var_name = get_node_value(identificador_node)
             data_type = extract_data_type_from_type_node(type_container_node)
             linea = get_node_line(identificador_node)
-            value = evaluate_expression(expression_node, scope_manager)
+            value = evaluate_expression(expression_node, scope_manager, tree_builder)
+            if data_type == 'yupay' and isinstance(value, float):
+                value = int(value) 
+            type_of_value = type(value).__name__
+            is_compatible = False
+            if data_type == 'yupay' and isinstance(value, int): is_compatible = True
+            elif data_type == 'chiqi' and isinstance(value, (int, float)): is_compatible = True
+            elif data_type == 'qillqa' and isinstance(value, str): is_compatible = True
+            elif data_type == 'chiqap' and isinstance(value, bool): is_compatible = True
+            if not is_compatible:
+                scope_manager.log_error(f"Error Semántico (Línea {linea}): Incompatibilidad de tipos. No se puede asignar un valor de tipo '{type_of_value}' a una variable de tipo '{data_type}'.")
             scope_manager.add_symbol(var_name, data_type, linea, "variable", value=value)
 
         elif node_type == 'AssignmentStmtSimple':
@@ -774,67 +867,54 @@ def analizar_semantica_y_construir_tabla_simbolos(nodo_raiz, scope_manager,
             expression_node = node.hijos[2]
             var_name = get_node_value(identificador_node)
             linea = get_node_line(identificador_node)
-            value = evaluate_expression(expression_node, scope_manager)
+            value = evaluate_expression(expression_node, scope_manager, tree_builder)
+            symbol = scope_manager.lookup_symbol(var_name, linea)
+            if symbol and symbol.data_type == 'yupay' and isinstance(value, float):
+                value = int(value)
             scope_manager.update_symbol_value(var_name, value, linea)
 
         elif node_type == 'LoopUpdateOpt': 
             if node.hijos and node.hijos[0].valor != 'epsilon_node':
                 visit_node_recursive(node.hijos[0]) 
 
-        elif node_type == 'IncrementoStmt':
-            id_node = node.hijos[0]
-            incremento_node = node.hijos[1]
-            op_node = incremento_node.hijos[0] 
+        elif node_type == 'LoopUpdateStmt':
+            identificador_node = node.hijos[0]
+            rest_node = node.hijos[1]
+            var_name = get_node_value(identificador_node)
+            linea = get_node_line(identificador_node)
+            first_child_of_rest = rest_node.hijos[0]
+            if first_child_of_rest.valor == 'OPERADOR_ASIGNACION':
+                symbol = scope_manager.lookup_symbol(var_name, linea)
+                if not symbol: return
+                expression_node = rest_node.hijos[1]
+                assigned_value = evaluate_expression(expression_node, scope_manager, tree_builder)
+                if symbol.data_type == 'yupay' and isinstance(assigned_value, float):
+                    assigned_value = int(assigned_value)
+                scope_manager.update_symbol_value(var_name, assigned_value, linea)
+            elif first_child_of_rest.valor == 'Incremento':
+                symbol = scope_manager.lookup_symbol(var_name, linea)
+                if not symbol: return
+                op_node = first_child_of_rest.hijos[0]
+                if not isinstance(symbol.value, (int, float)):
+                    scope_manager.log_error(f"Error Semántico (Línea {linea}): El operador '++' o '--' solo se puede aplicar a yupay o chiqi, no a '{symbol.data_type}'.")
+                    return
+                new_value = symbol.value
+                if op_node.valor == 'IncrementoOpPlus': new_value += 1
+                elif op_node.valor == 'IncrementoOpMinus': new_value -= 1
+                scope_manager.update_symbol_value(var_name, new_value, linea)
+            elif first_child_of_rest.valor == 'PARENTESIS_ABRE':
+                execute_function_call(var_name, rest_node, scope_manager, linea, tree_builder)
 
-            var_name = get_node_value(id_node)
-            linea = get_node_line(id_node)
-            symbol = scope_manager.lookup_symbol(var_name, linea)
-
-            if not symbol: return
-            if not isinstance(symbol.value, (int, float)):
-                scope_manager.log_error(f"Error semántico (Línea {linea}): El operador '++' o '--' solo se puede aplicar a yupay o chiqi, no a '{symbol.data_type}'.")
-                return
-            
-            if op_node.valor == 'IncrementoOpPlus':
-                symbol.value += 1
-            elif op_node.valor == 'IncrementoOpMinus':
-                symbol.value -= 1
-
-        elif node_type in ['Instruccion', 
-                           'Estructura_If',
-                           'Bucle',
-                           'LoopDeclOrAssign', 'ExpressionOpt', 
-                           'Incremento', 'IncrementoOpPlus', 'IncrementoOpMinus',
-                           'ArgumentosElseIfOpt'
-                           ]:
-            if (_IS_RETURNING and is_function_execution) or \
-               (_IS_BREAKING_LOOP and scope_manager.is_inside_loop()): return
+        elif node_type in ['Instruccion', 'Estructura_If', 'Bucle', 'LoopDeclOrAssign', 'ExpressionOpt', 'Incremento', 'IncrementoOpPlus', 'IncrementoOpMinus', 'ArgumentosElseIfOpt', 'LoopUpdateStmtRest']:
+            if (_IS_RETURNING and is_function_execution) or (_IS_BREAKING_LOOP and scope_manager.is_inside_loop()): return
             for hijo in node.hijos:
                 visit_node_recursive(hijo)
-                if (_IS_RETURNING and is_function_execution) or \
-                   (_IS_BREAKING_LOOP and scope_manager.is_inside_loop()): break 
-
-        elif node_type.endswith('_TOKEN') or node_type.startswith('PALABRA_RESERVADA_') or \
-             node_type.startswith('TIPO_') or node_type.startswith('OPERADOR_') or \
-             node_type in ['PARENTESIS_ABRE', 'PARENTESIS_CIERRA', 'LLAVE_ABRE', 'LLAVE_CIERRA',
-                            'COMA_TOKEN', 'PUNTO_Y_COMA_TOKEN', 'DOS_PUNTOS_TOKEN', '$',
-                            'InicializacionOpt', 'ParamListOpt', 'Param', 'ParamTail', 'TypeOpt', 'Type',
-                            'SumaRestaOp', 'MulDivModOp', 'OpcionLogico', 'OpcionLogicoWan', 'OpcionLogicoUtaq',
-                            'OpcionComparacion', 'OpcionComparacionIgual', 'OpcionComparacionNoIgual',
-                            'OpcionComparacionMenor', 'OpcionComparacionMayor', 'OpcionComparacionMenorIgual',
-                            'OpcionComparacionMayorIgual', 'Dato',
-                            'Expression', 'TermLogico', 'TermComparacion', 'SumaRestaTerm', 'Factor', 'Unidad',
-                            'ExpressionPrima', 'TermLogicoConti', 'SumaRestaConti', 'MulDivModConti',
-                            'ValorUnitario', 'ValorUnitarioRest', 'ArgumentosFuncionOpt', 'MasArgumentosFuncion'
-                           ]:
-            pass 
-        else: 
-            if (_IS_RETURNING and is_function_execution) or \
-               (_IS_BREAKING_LOOP and scope_manager.is_inside_loop()): return
+                if (_IS_RETURNING and is_function_execution) or (_IS_BREAKING_LOOP and scope_manager.is_inside_loop()): break 
+        else:
+            if (_IS_RETURNING and is_function_execution) or (_IS_BREAKING_LOOP and scope_manager.is_inside_loop()): return
             for hijo in node.hijos: 
                 visit_node_recursive(hijo)
-                if (_IS_RETURNING and is_function_execution) or \
-                   (_IS_BREAKING_LOOP and scope_manager.is_inside_loop()): break
+                if (_IS_RETURNING and is_function_execution) or (_IS_BREAKING_LOOP and scope_manager.is_inside_loop()): break
     
     visit_node_recursive(nodo_raiz)
 
@@ -883,7 +963,7 @@ def construir_arbol_sintactico(codigo_fuente_str, ruta_tabla_csv, simbolo_inicia
 
 if __name__ == "__main__":
     tabla_csv_path = os.path.join(BASE_DIR, "Gramática", "tablitaTransiciones.csv")
-    archivo_entrada_path = os.path.join(BASE_DIR, "Inputs", "input1.wasi")
+    archivo_entrada_path = os.path.join(BASE_DIR, "Inputs", "input7.wasi")
     
     codigo_a_parsear = None
     try:
@@ -900,33 +980,71 @@ if __name__ == "__main__":
         print("El código fuente está vacío o solo contiene espacios en blanco.")
         exit(1)
 
-    raiz_arbol = construir_arbol_sintactico(codigo_fuente_str=codigo_a_parsear, ruta_tabla_csv=tabla_csv_path)
+    raiz_arbol_sintactico = construir_arbol_sintactico(codigo_fuente_str=codigo_a_parsear, ruta_tabla_csv=tabla_csv_path)
     
-    if raiz_arbol:
-        print("\n--- Salida de Consola ---")
-        if 'TOKENS_CON_LEXEMA' not in globals():
-             print("ALERTA CRÍTICA: 'TOKENS_CON_LEXEMA' no está definido globalmente en AnalizadorSemantico.")
-             TOKENS_CON_LEXEMA = {'IDENTIFICADOR_TOKEN', 'QILLQA_TOKEN', 'YUPAY_TOKEN', 'CHIQI_KAY_TOKEN'}
-
+    if raiz_arbol_sintactico:
         scope_manager = ScopeManager()
-        _IS_RETURNING = False
-        _CURRENT_FUNCTION_RETURN_VALUE = None
-        _IS_BREAKING_LOOP = False # Asegurar reseteo inicial
+        tree_builder = ActivationTreeBuilder()
+
+        print("--- Fase 1: Análisis y Declaración de Símbolos ---")
+        analizar_semantica_y_construir_tabla_simbolos(raiz_arbol_sintactico, scope_manager, tree_builder)
         
-        analizar_semantica_y_construir_tabla_simbolos(raiz_arbol, scope_manager)
+        print(scope_manager.format_symbol_table(scope_manager.symbol_table, 
+                                                title="Tabla de Símbolos Post-Declaración"))
+        print("-" * 50)
         
+        print("\n--- Fase 2: Ejecución (Salida de Consola) ---")
+        
+        hatun_ruray_symbol = None
+        for sym in scope_manager.symbol_table:
+            if sym.name == "hatun_ruray" and sym.symbol_type == "funcion":
+                hatun_ruray_symbol = sym
+                break
+        
+        if hatun_ruray_symbol:
+            _IS_RETURNING = False
+            _CURRENT_FUNCTION_RETURN_VALUE = None
+            _IS_BREAKING_LOOP = False
+            
+            execute_function_call(
+                func_name="hatun_ruray",
+                valor_unitario_rest_node=None,
+                scope_manager=scope_manager,
+                line_call=hatun_ruray_symbol.line_declared,
+                tree_builder=tree_builder
+            )
+        else:
+            print("Advertencia: No se encontró la función principal 'hatun_ruray'. No se ejecutó nada.")
+
+        print("-" * 50)
+
+        print("\n--- Fase 3: Generación de Árbol de Activación ---")
+        dot_code = tree_builder.to_graphviz()
+        output_dot_path = os.path.join(BASE_DIR, "Salida Graphviz", "arbol_activacion.txt")
+        try:
+            os.makedirs(os.path.dirname(output_dot_path), exist_ok=True)
+            with open(output_dot_path, 'w', encoding='utf-8') as f:
+                f.write(dot_code)
+            print(f"✅ Árbol de activación guardado en: {output_dot_path}")
+            print("   Para generar la imagen, usa el comando: dot -Tpng {ruta_a_dot} -o arbol.png".format(ruta_a_dot=output_dot_path))
+        except Exception as e:
+            print(f"❌ Error al guardar el archivo .dot: {e}")
+
+        print("-" * 50)
+
+        print("\n--- Reporte Final ---")
         def filter_hatun_ruray(symbol_list):
             return [s for s in symbol_list if not (s.name == "hatun_ruray" and s.symbol_type == "funcion")]
 
         final_symbol_table_snapshot_all = copy.deepcopy(scope_manager.symbol_table)
         final_symbol_table_filtered = filter_hatun_ruray(final_symbol_table_snapshot_all)
         print(scope_manager.format_symbol_table(final_symbol_table_filtered, 
-                                                title="Tabla de Símbolos COMPLETA"))
+                                                title="Tabla de Símbolos COMPLETA (sin hatun_ruray)"))
 
         active_symbols_final_all = [s for s in scope_manager.symbol_table if s.is_active]
         active_symbols_final_filtered = filter_hatun_ruray(active_symbols_final_all)
         print(scope_manager.format_symbol_table(active_symbols_final_filtered, 
-                                                title="Tabla de Símbolos SÓLO ACTIVOS"))
+                                                title="Tabla de Símbolos SÓLO ACTIVOS (sin hatun_ruray)"))
         
         scope_manager.print_errors()
         
