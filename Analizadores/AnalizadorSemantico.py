@@ -1,10 +1,11 @@
-from AnalizadorLexico import analyze_file
-from analizadorSintactico import Nodo, parser_ll1, cargar_tabla_desde_csv, TOKENS_CON_LEXEMA
-
+from AnalizadorLexico import *
+from analizadorSintactico import *
+import sys
 import tempfile
 import os
 import sys
 import copy
+sys.setrecursionlimit(2147483647)
 
 _CURRENT_FUNCTION_RETURN_VALUE = None
 _IS_RETURNING = False
@@ -963,7 +964,7 @@ def construir_arbol_sintactico(codigo_fuente_str, ruta_tabla_csv, simbolo_inicia
 
 if __name__ == "__main__":
     tabla_csv_path = os.path.join(BASE_DIR, "Gramática", "tablitaTransiciones.csv")
-    archivo_entrada_path = os.path.join(BASE_DIR, "Inputs", "input7.wasi")
+    archivo_entrada_path = os.path.join(BASE_DIR, "Inputs", "input2.wasi")
     
     codigo_a_parsear = None
     try:
@@ -991,6 +992,36 @@ if __name__ == "__main__":
         
         print(scope_manager.format_symbol_table(scope_manager.symbol_table, 
                                                 title="Tabla de Símbolos Post-Declaración"))
+        
+        print("-" * 50)
+
+        print("\n--- Fase 3: Generación de Árbol de Activación ---")
+        dot_code = tree_builder.to_graphviz()
+        output_dot_path = os.path.join(BASE_DIR, "Salida Graphviz", "arbol_activacion.txt")
+        try:
+            os.makedirs(os.path.dirname(output_dot_path), exist_ok=True)
+            with open(output_dot_path, 'w', encoding='utf-8') as f:
+                f.write(dot_code)
+            print(f"✅ Árbol de activación guardado en: {output_dot_path}")
+            print("   Para generar la imagen, usa el comando: dot -Tpng {ruta_a_dot} -o arbol.png".format(ruta_a_dot=output_dot_path))
+        except Exception as e:
+            print(f"❌ Error al guardar el archivo .txt: {e}")
+
+        print("-" * 50)
+
+        print("\n--- Reporte Final ---")
+        def filter_hatun_ruray(symbol_list):
+            return [s for s in symbol_list if not (s.name == "hatun_ruray" and s.symbol_type == "funcion")]
+
+        final_symbol_table_snapshot_all = copy.deepcopy(scope_manager.symbol_table)
+        final_symbol_table_filtered = filter_hatun_ruray(final_symbol_table_snapshot_all)
+        print(scope_manager.format_symbol_table(final_symbol_table_filtered, 
+                                                title="Tabla de Símbolos COMPLETA (sin hatun_ruray)"))
+
+        active_symbols_final_all = [s for s in scope_manager.symbol_table if s.is_active]
+        active_symbols_final_filtered = filter_hatun_ruray(active_symbols_final_all)
+        print(scope_manager.format_symbol_table(active_symbols_final_filtered, title="Tabla de Símbolos SÓLO ACTIVOS (sin hatun_ruray)"))
+
         print("-" * 50)
         
         print("\n--- Fase 2: Ejecución (Salida de Consola) ---")
@@ -1016,36 +1047,6 @@ if __name__ == "__main__":
         else:
             print("Advertencia: No se encontró la función principal 'hatun_ruray'. No se ejecutó nada.")
 
-        print("-" * 50)
-
-        print("\n--- Fase 3: Generación de Árbol de Activación ---")
-        dot_code = tree_builder.to_graphviz()
-        output_dot_path = os.path.join(BASE_DIR, "Salida Graphviz", "arbol_activacion.txt")
-        try:
-            os.makedirs(os.path.dirname(output_dot_path), exist_ok=True)
-            with open(output_dot_path, 'w', encoding='utf-8') as f:
-                f.write(dot_code)
-            print(f"✅ Árbol de activación guardado en: {output_dot_path}")
-            print("   Para generar la imagen, usa el comando: dot -Tpng {ruta_a_dot} -o arbol.png".format(ruta_a_dot=output_dot_path))
-        except Exception as e:
-            print(f"❌ Error al guardar el archivo .dot: {e}")
-
-        print("-" * 50)
-
-        print("\n--- Reporte Final ---")
-        def filter_hatun_ruray(symbol_list):
-            return [s for s in symbol_list if not (s.name == "hatun_ruray" and s.symbol_type == "funcion")]
-
-        final_symbol_table_snapshot_all = copy.deepcopy(scope_manager.symbol_table)
-        final_symbol_table_filtered = filter_hatun_ruray(final_symbol_table_snapshot_all)
-        print(scope_manager.format_symbol_table(final_symbol_table_filtered, 
-                                                title="Tabla de Símbolos COMPLETA (sin hatun_ruray)"))
-
-        active_symbols_final_all = [s for s in scope_manager.symbol_table if s.is_active]
-        active_symbols_final_filtered = filter_hatun_ruray(active_symbols_final_all)
-        print(scope_manager.format_symbol_table(active_symbols_final_filtered, 
-                                                title="Tabla de Símbolos SÓLO ACTIVOS (sin hatun_ruray)"))
-        
         scope_manager.print_errors()
         
     else:

@@ -18,9 +18,16 @@ ruray dividir (yupay : n) yupay {
         kutipay dividir(n-1);
     }
 }
+
 ruray hatun_ruray ( ) {
     var x yupay = 5;
     var y yupay;
     y=dividir(x);
     imprimiy("Resultado: ", y);
+
+    var prueba yupay = 3 + x / chiqaq + 0.5;
+
+    imprimiy("Prueba: ", prueba);
+
+    imprimiy("Joshua tiene 6 puntos en metodos de software");
 }

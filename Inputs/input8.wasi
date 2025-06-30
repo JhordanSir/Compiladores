@@ -1,0 +1,11 @@
+# sumita compleja
+ruray hatun_ruray() {
+    var proyecto1 chiqi = 18;
+    var proyecto2 chiqi = 19;
+    var acumulado chiqi = 9.28;
+    var extra chiqi = 0.5;
+    var sumita chiqi = (proyecto1*0.5 + proyecto2*0.5) * 0.45;
+    var notaFinal chiqi = sumita + extra;
+    var notaFinalAcumulado chiqi = acumulado + (notaFinal*0.3);
+    imprimiy ( "Mi nota de ADA sin examen es: ",notaFinalAcumulado ) ;
+}

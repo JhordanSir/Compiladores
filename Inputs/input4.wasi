@@ -42,7 +42,7 @@ ruray hatun_ruray ( )
             id2--;
             bool = mana_chiqap ; 
             imprimiy ( fact ( num ) * 10 ) ; 
-            imprimiy ( bool_negation ( bool,bool ), texto ) ; # corregir
+            imprimiy ( bool_negation ( bool,bool ) ) ;
             pakiy ;
         }
     } 

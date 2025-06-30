@@ -1,6 +1,18 @@
-# Este es un comentario de línea
 
-ruray hatun_ruray ( ) {
-    imprimiy ("Este no es un comentario") ;
-    imprimiy (1.4) ;
+ruray hatun_ruray() {
+    var x yupay;
+    x = 10;
+    var y yupay;
+    y = x * 2;
+    imprimiy(y + 5);
+    sichus (y > 20) {
+        imprimiy(100);
+    } mana_sichus {
+        imprimiy(200);
+    }
+    var id yupay;
+    para ( id = 0 ; id < 4 ; id ++ ) 
+    { 
+        imprimiy(id);
+    } 
 }

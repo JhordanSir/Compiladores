@@ -1,13 +1,11 @@
 ruray factorial ( yupay : n ) yupay {
-    var resultado yupay = 1 ;
-    var i yupay ;
-    para (i = 1 ; i<=n ; i++){
-        resultado = resultado * i;
+    sichus (n <= 1){
+        kutipay 1;
     }
-    kutipay resultado;
+    kutipay n * factorial (n - 1);
 }
 
 ruray hatun_ruray (){
-    var x yupay = 5;
-    imprimiy (factorial (x));
+    var x yupay = 6;
+    imprimiy (factorial(x));
 }
