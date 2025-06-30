@@ -19,6 +19,8 @@ Este proyecto implementa un **compilador completo para el lenguaje WayraSimi**, 
 
 El proyecto también incluye un visualizador 3D desarrollado con Three.js para mostrar el árbol sintáctico de manera interactiva.
 
+Adicionalmente, se ha desarrollado una **extensión personalizada para VS Code** que permite visualizar y editar archivos `.wasi` con resaltado de sintaxis y características específicas del lenguaje WayraSimi, proporcionando una experiencia de desarrollo más atractiva y funcional.
+
 ## Justificación y Características del Lenguaje
 
 En WayraSimi, el desarrollador encuentra una plataforma que prioriza tanto la **productividad** como la **eficiencia en tiempo de ejecución**, logrando unir lo mejor de dos mundos:
@@ -41,6 +43,7 @@ En WayraSimi, el desarrollador encuentra una plataforma que prioriza tanto la **
 
 - Python 3.x o superior para ejecutar el compilador
 - Node.js y npm para la visualización del frontend
+- VS Code (recomendado) para utilizar la extensión personalizada de archivos .wasi
 
 ## Cómo Ejecutar el Proyecto
 
@@ -79,6 +82,14 @@ npm run dev
 ```
 
 Esto iniciará el servidor de desarrollo donde podrá visualizar el árbol sintáctico en 3D.
+
+### Paso 3: Utilizar la Extensión VS Code (Opcional)
+
+Para una mejor experiencia de desarrollo, instale la extensión personalizada de WayraSimi en VS Code que proporciona:
+- Resaltado de sintaxis para archivos `.wasi`
+- Autocompletado de palabras clave del lenguaje
+- Detección de errores en tiempo real
+- Formateo automático del código WayraSimi
 
 ## ¿Cómo Funciona el Compilador?
 
@@ -132,6 +143,8 @@ La vista 3D ofrece los siguientes controles:
 
 El compilador puede procesar archivos con extensión `.wasi` ubicados en la carpeta `Inputs/`. Ejemplos disponibles:
 - `input1.wasi` - `input8.wasi`: Diferentes casos de prueba del lenguaje WayraSimi
+
+**Nota**: Para una mejor experiencia al editar archivos `.wasi`, se recomienda utilizar la extensión personalizada de VS Code que proporciona resaltado de sintaxis y otras características específicas del lenguaje.
 
 ## Estructura del Proyecto
 

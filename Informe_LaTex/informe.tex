@@ -1,0 +1,398 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% Paquetes existentes
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{csvsimple}
+\usepackage{booktabs}
+\usepackage{underscore}
+\usepackage{hyphenat}
+\usepackage{adjustbox}
+\usepackage{listings}
+\usepackage{listingsutf8}
+
+% Definiciones de listados y colores (sin cambios)
+\lstdefinelanguage{BNF}{
+  morekeywords={::=,|},
+  morecomment=[l]{//},
+  morestring=[b]",
+  literate={<}{{\textless}}1 {>}{{\textgreater}}1
+}
+
+\lstset{
+  language=BNF,
+  basicstyle=\ttfamily,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  stringstyle=\color{red},
+}
+
+\definecolor{codebg}{rgb}{0.95,0.95,0.95}
+\definecolor{codeframe}{rgb}{0,0,0}
+\definecolor{keyword}{rgb}{0.13,0.55,0.13}
+\definecolor{comment}{rgb}{0.5,0.5,0.5}
+\definecolor{string}{rgb}{0.58,0,0.83}
+\definecolor{variable}{rgb}{0,0,1}
+\definecolor{operator}{rgb}{0.75,0,0.75}
+
+\lstdefinestyle{mystyle}{
+    inputencoding=utf8,
+    extendedchars=true,
+    literate={ñ}{{\~n}}1
+              {Ñ}{{\~N}}1
+              {á}{{\'a}}1
+              {é}{{\'e}}1
+              {í}{{\'i}}1
+              {ó}{{\'o}}1
+              {ú}{{\'u}}1
+              {Á}{{\'A}}1
+              {É}{{\'E}}1
+              {Í}{{\'I}}1
+              {Ó}{{\'O}}1
+              {Ú}{{\'U}}1,
+    backgroundcolor=\color{codebg},
+    keywordstyle=\color{keyword}\bfseries,
+    commentstyle=\color{comment}\itshape,
+    stringstyle=\color{string},
+    identifierstyle=\color{variable},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    numbers=left,
+    numberstyle=\tiny\color{codeframe},
+    frame=single,
+    rulecolor=\color{codeframe},
+    captionpos=b,
+    showstringspaces=false,
+    tabsize=4,
+    xleftmargin=10pt,
+    numbersep=5pt,
+    breaklines=true,
+    breakatwhitespace=true,
+    postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\title{WayraSimi: Un Compilador de Lenguaje de Programación en Quechua\\
+{\footnotesize \textsuperscript{*}Implementación de un compilador completo para el lenguaje WayraSimi}}
+
+\author{\IEEEauthorblockN{1\textsuperscript{st} Jhordan Steven Octavio Huamani Huamani}
+\IEEEauthorblockA{\textit{Ingeniería de Software} \\
+\textit{Universidad La Salle}\\
+Arequipa, Perú \\
+jhuamani@ulasalle.edu.pe}
+\and
+\IEEEauthorblockN{2\textsuperscript{nd} Miguel Angel Flores Leon}
+\IEEEauthorblockA{\textit{Ingeniería de Software} \\
+\textit{Universidad La Salle}\\
+Arequipa, Perú \\
+mflores@ulasalle.edu.pe}
+\and
+\IEEEauthorblockN{3\textsuperscript{rd} Jorge Luis Ortiz Castañeda}
+\IEEEauthorblockA{\textit{Ingeniería de Software} \\
+\textit{Universidad La Salle}\\
+Arequipa, Perú \\
+jortiz@ulasalle.edu.pe}
+}
+
+\maketitle
+
+\begin{abstract}
+Este documento presenta WayraSimi, un lenguaje de programación compilado que combina la sintaxis clara de Python con la eficiencia de Go, desarrollado íntegramente en Quechua. El proyecto implementa un compilador completo que incluye análisis léxico, sintáctico, semántico y generación de código assembly. WayraSimi representa un avance significativo en la adaptación de la tecnología a las lenguas originarias, proporcionando una herramienta de programación que honra las raíces culturales andinas mientras ofrece capacidades modernas de desarrollo de software. El compilador procesa código fuente en cuatro etapas secuenciales y incluye un visualizador 3D interactivo del árbol sintáctico desarrollado con Three.js, además de una extensión personalizada para VS Code.
+\end{abstract}
+
+\begin{IEEEkeywords}
+compilador, lenguaje de programación, Quechua, análisis léxico, análisis sintáctico, análisis semántico, generación de código
+\end{IEEEkeywords}
+
+\section{Introducción}
+
+En el presente informe se detalla exhaustivamente el proceso de desarrollo del lenguaje de programación WayraSimi, un compilador completo desarrollado íntegramente en Quechua. Este proyecto representa un esfuerzo significativo para crear una herramienta de programación que honre las tradiciones culturales andinas mientras proporciona capacidades modernas de desarrollo de software.
+
+WayraSimi (que significa "Lenguaje del Viento" en Quechua) combina la claridad sintáctica de Python con la eficiencia de Go, creando un lenguaje compilado que busca ser tanto accesible como potente. El proyecto incluye un compilador de cuatro etapas: análisis léxico, sintáctico, semántico y generación de código assembly~\cite{b1}.
+
+El desarrollo de este compilador aborda una necesidad importante en el campo de la informática: la adaptación de la tecnología a las lenguas originarias. Esto no solo facilita la enseñanza de conceptos de programación desde una perspectiva culturalmente significativa, sino que también fortalece el vínculo entre la tecnología moderna y nuestras tradiciones ancestrales~\cite{b3}.
+
+\subsection{Motivación}
+
+WayraSimi nace de la necesidad de expresar la lógica del mundo moderno en el lenguaje Quechua, honrando nuestras raíces ancestrales. El lenguaje fue concebido para que los pueblos andinos puedan describir algoritmos y estructuras de datos utilizando términos que resuenan con nuestra cosmovisión: "yupay" para los enteros, "qillqa" para las cadenas de texto, "ruray" para definir funciones. El espíritu del lenguaje, que combina la claridad de Python con la eficiencia de Go, está representado por su mascota, GoPhy (Figura \ref{fig:gophy}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.6\linewidth]{gophy.jpg}
+\caption{GoPhy, la mascota de WayraSimi, una fusión que representa la sintaxis amigable de Python (serpiente) y el rendimiento de Go (gopher).}
+\label{fig:gophy}
+\end{figure}
+
+Este enfoque no solo facilita la comprensión de conceptos de programación, sino que también preserva y promueve el uso del Quechua en contextos tecnológicos modernos, creando un puente entre la sabiduría ancestral y la innovación contemporánea.
+
+\section{Especificación Léxica}
+
+La especificación léxica de WayraSimi define los tokens fundamentales del lenguaje, cada uno con su correspondiente expresión regular y significado en Quechua. La Tabla \ref{tab:tokens} presenta la especificación completa de tokens~\cite{b1}.
+
+\begin{table*}[htbp]
+\centering
+\caption{Especificación de Tokens en WayraSimi}
+\label{tab:tokens}
+\scriptsize
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+\textbf{Token} & \textbf{Ejemplos} & \textbf{Regex} & \textbf{Representación} & \textbf{Significado en Quechua} \\
+\hline
+YUPAY\_TOKEN & 123, -5 & [0-9]+ & yupay (entero) & Número, Cuenta \\
+\hline
+CHIQI\_TOKEN & 3.14, -0.5, 2.0 & [0-9]+\.[0-9]+ & chiqikay (flotante) & Punto, Decimal \\
+\hline
+QILLQA\_TOKEN & "hola", "mundo" & "[a-zA-Z]*" & qillqa (texto) & Escritura, Letra \\
+\hline
+CHIQAP\_TOKEN & chiqap, mana chiqap & chiqap|mana chiqap & chiqap\_kay (booleano) & Verdad, Realidad \\
+\hline
+IDENTIFICADOR\_TOKEN & variable, funcion\_1 & [a-zA-Z][a-zA-Z0-9]* & identificador & Nombre \\
+\hline
+OPERADOR\_MAS & + & \textbackslash+ & suma & Yapay (Añadir) \\
+\hline
+OPERADOR\_MENOS & - & \textbackslash- & resta & Qichuy (Quitar) \\
+\hline
+OPERADOR\_PACHA & * & \textbackslash* & multiplicación & Miray (Multiplicar) \\
+\hline
+OPERADOR\_RAKIY & / & \textbackslash/ & división & Rakiy (Dividir) \\
+\hline
+OPERADOR\_MODULO & \% & \textbackslash\% & módulo & Phuyu \\
+\hline
+OPERADOR\_ASIGNACION & = & = & asignación & Churay (Colocar) \\
+\hline
+OPERADOR\_IGUALDAD & == & == & igualdad & Kikin (Mismo) \\
+\hline
+OPERADOR\_MANA\_IGUAL & != & != & desigualdad & Mana kikin \\
+\hline
+OPERADOR\_MENOR & < & < & menor que & Uchuy (Pequeño) \\
+\hline
+OPERADOR\_MAYOR & > & > & mayor que & Hatun (Grande) \\
+\hline
+PALABRA\_RESERVADA\_SICHUS & sichus & sichus & si (if) & Si, Cuando \\
+\hline
+PALABRA\_RESERVADA\_PARA & para & para & bucle for & Por, Para \\
+\hline
+PALABRA\_RESERVADA\_RURAY & ruray & ruray & función & Hacer, Realizar \\
+\hline
+PALABRA\_RESERVADA\_KUTIPAY & kutipay & kutipay & retorno & Devolver, Regresar \\
+\hline
+PALABRA\_RESERVADA\_IMPRIMIY & imprimiy & imprimiy & imprimir & Mostrar, Publicar \\
+\hline
+\end{tabular}
+\end{table*}
+
+Los tokens están diseñados para reflejar conceptos familiares en Quechua, facilitando así la comprensión y el aprendizaje del lenguaje por parte de hablantes nativos.
+
+\section{Gramática}
+
+La gramática de WayraSimi está definida en formato BNF (Backus-Naur Form) y ha sido verificada para asegurar que no sea ambigua y esté factorizada por la izquierda~\cite{b2}. La gramática completa se presenta a continuación:
+
+\begin{lstlisting}[language=BNF, style=mystyle, caption={Gramática BNF de WayraSimi}]
+<Program> ::= <DefinitionList> <Principal>
+
+<DefinitionList> ::= <FunctionDef> <DefinitionList> | E
+
+<FunctionDef> ::= "ruray" <IDENTIFICADOR_TOKEN> "(" <ParamListOpt> ")" <TypeOpt> <Block>
+
+<Principal> ::= "ruray" "hatun_ruray" "(" ")" <Block>
+
+<ParamListOpt> ::= <ParamList> | E
+<ParamList> ::= <Param> <MoreParams>
+<MoreParams> ::= "," <Param> <MoreParams> | E
+<Param> ::= <Type> ":" <IDENTIFICADOR_TOKEN>
+
+<Type> ::= "yupay" | "chiqi" | "chiqap" | "qillqa"
+<TypeOpt> ::= <Type> | E
+
+<Block> ::= "{" <Instrucciones> "}"
+<Instrucciones> ::= <Instruccion> <Instrucciones> | E
+
+<Instruccion> ::= <DeclaracionVariables>
+               | <PrintStmt>
+               | <Bucle>
+               | <Estructura_If>
+               | <Retorno>
+               | <incrementos> ";"
+
+<DeclaracionVariables> ::= "var" <ListaIdentificadores> <Type> <InicializacionOpt> ";"
+                         | <ListaIdentificadores> ":=" <opciones> ";"
+                         | <IDENTIFICADOR_TOKEN> ":=" <opciones> ";"
+
+<PrintStmt> ::= "imprimiy" "(" <ArgumentPrint> ")" ";"
+
+<opciones> ::= <funcion> 
+             | <comparacion> 
+             | <IDENTIFICADOR_TOKEN> 
+             | <datos> 
+             | <operaciones_matematicas>
+             | <incrementos>
+
+<operaciones_matematicas> ::= <termino> <expresion_tail>
+<expresion_tail> ::= "+" <termino> <expresion_tail>
+                   | "-" <termino> <expresion_tail>
+                   | E
+
+<Bucle> ::= <for> | <while> | <bucle_infinito>
+<for> ::= "para" "(" <LoopInitialization> ";" <opciones> ";" <LoopUpdate> ")" <Block>
+
+<Estructura_If> ::= "sichus" "(" <opciones> ")" <Block> <Else_opcional>
+
+<Retorno> ::= "kutipay" <IDENTIFICADOR_TOKEN> ";"
+            | "kutipay" ";"
+            | "kutipay" <datos> ";"
+
+<datos> ::= <YUPAY_TOKEN> | <CHIQI_TOKEN> | <CHIQAP_TOKEN> | <QILLQA_TOKEN>
+\end{lstlisting}
+
+\subsection{Gramática LL(1)}
+
+Para la implementación del analizador sintáctico, la gramática ha sido transformada a formato LL(1), eliminando la recursión por la izquierda y factorizando las reglas. La Figura \ref{fig:ll1_test} muestra la interfaz utilizada para probar la gramática y verificar la factorización. Ejemplos de entrada válidos incluyen:
+
+\begin{itemize}
+\item \texttt{ruray hatun\_ruray ( ) \{ var id yupay ; \}} \hfill \textit{(Declaración simple)}
+\item \texttt{ruray hatun\_ruray ( ) \{ sichus ( id < id ( ) utaq id == id ( ) ) \{ imprimiy ( id ) ; \} \}} \hfill \textit{(Condicional compuesto)}
+\item \texttt{ruray hatun\_ruray ( ) \{ para ( id = id ; id < id ; id ++ ) \{ \} \}} \hfill \textit{(Bucle for)}
+\item \texttt{ruray hatun\_ruray ( ) \{ sichus ( id < id ) \{ sichus ( id > id ) \{ imprimiy ( id ) ; \} \} \}} \hfill \textit{(input2: condicionales anidados)}
+\item \texttt{ruray factorial ( n yupay ) yupay \{ sichus ( n == 0 ) \{ kutipay 1 ; \} mana \{ kutipay n * factorial ( n - 1 ) ; \} \}} \hfill \textit{(input7: recursividad, factorial)}
+\item \texttt{ruray hatun\_ruray ( ) \{ var x yupay ; x := ( 5 + 3 ) * ( 2 - 1 ) / 4 ; imprimiy ( x ) ; \}} \hfill \textit{(input8: operaciones complejas)}
+\end{itemize}
+
+\section{Implementación}
+
+\subsection{Arquitectura del Compilador}
+
+El compilador WayraSimi está implementado en Python y consta de cuatro componentes principales que se ejecutan secuencialmente:
+
+\begin{enumerate}
+\item \textbf{Analizador Léxico} (\texttt{AnalizadorLexico.py}): Tokeniza el código fuente y identifica los elementos léxicos del lenguaje.
+\item \textbf{Analizador Sintáctico} (\texttt{analizadorSintactico.py}): Construye el árbol de sintaxis abstracta (AST) verificando que el código cumple con la gramática.
+\item \textbf{Analizador Semántico} (\texttt{AnalizadorSemantico.py}): Verifica la consistencia semántica, tipos de datos y alcance de variables.
+\item \textbf{Generador de Código Assembly} (\texttt{creadorAssembly.py}): Produce código assembly optimizado a partir del AST verificado.
+\end{enumerate}
+
+\subsection{Herramientas Adicionales}
+
+El proyecto incluye herramientas complementarias que enriquecen la experiencia de desarrollo:
+
+\begin{itemize}
+\item \textbf{Visualizador 3D}: Aplicación web desarrollada con Three.js que muestra el árbol sintáctico de manera interactiva.
+\item \textbf{Extensión VS Code}: Extensión personalizada que proporciona resaltado de sintaxis y características específicas para archivos \texttt{.wasi}.
+\item \textbf{Generador de Tablas}: Utilidad para crear tablas de transiciones LL(1) a partir de la gramática.
+\end{itemize}
+
+\subsection{Proceso de Compilación}
+
+El proceso de compilación sigue estos pasos:
+
+\begin{enumerate}
+\item El analizador léxico lee el archivo fuente \texttt{.wasi} y genera tokens.
+\item El analizador sintáctico procesa los tokens y construye el AST.
+\item El analizador semántico verifica la consistencia del programa.
+\item El generador de código produce el assembly final.
+\item Opcionalmente, el visualizador 3D muestra el árbol sintáctico.
+\end{enumerate}
+
+\subsection{Repositorio}
+
+El código fuente completo del proyecto está disponible en el repositorio del curso, incluyendo todos los analizadores, herramientas de visualización, casos de prueba, y documentación técnica.
+
+\noindent\textbf{Repositorio:} \\[-1em]
+\begin{itemize}
+  \item \url{https://github.com/JhordanSir/Compiladores.git}
+\end{itemize}
+
+\section{Resultados}
+
+\subsection{Visualización 3D}
+
+El visualizador 3D desarrollado con Three.js permite una representación interactiva del árbol sintáctico (ver Figura \ref{fig:3d_tree}), utilizando:
+\begin{itemize}
+\item Esferas azules para símbolos no terminales
+\item Esferas verdes para símbolos terminales
+\item Esferas naranjas para producciones epsilon
+\end{itemize}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{three1.jpg}
+\caption{Visualización 3D interactiva de árboles sintácticos generados por el compilador WayraSimi.}
+\label{fig:3d_tree}
+\end{figure}
+
+La interfaz incluye controles de órbita, zoom, navegación por teclado, selector de temas y función de captura de pantalla.
+
+\subsection{Casos de Prueba}
+
+El compilador ha sido probado exitosamente con ocho casos de prueba diferentes (\texttt{input1.wasi} a \texttt{input8.wasi}), demostrando su capacidad para procesar diversos constructos del lenguaje incluyendo declaraciones de variables, estructuras de control, funciones y operaciones matemáticas. Ejemplos destacados:
+
+\begin{itemize}
+\item \textbf{input2}: Condicionales anidados
+
+\begin{lstlisting}[language=BNF, style=mystyle]
+ruray hatun_ruray ( ) {
+  sichus ( x < 10 ) {
+    sichus ( y > 5 ) {
+      imprimiy ( y ) ;
+    }
+  }
+}
+\end{lstlisting}
+
+\item \textbf{input7}: Recursividad (factorial)
+
+\begin{lstlisting}[language=BNF, style=mystyle]
+ruray factorial ( n yupay ) yupay {
+  sichus ( n == 0 ) {
+    kutipay 1 ;
+  } mana {
+    kutipay n * factorial ( n - 1 ) ;
+  }
+}
+\end{lstlisting}
+
+\item \textbf{input8}: Operaciones matemáticas complejas
+
+\begin{lstlisting}[language=BNF, style=mystyle]
+ruray hatun_ruray ( ) {
+  var x yupay ;
+  x = ( 5 + 3 ) * ( 2 - 1 ) / 4 ;
+  imprimiy ( x ) ;
+}
+\end{lstlisting}
+
+\end{itemize}
+
+\section{Conclusiones}
+
+WayraSimi representa un avance significativo en la integración de lenguas originarias con la tecnología moderna. El proyecto ha logrado:
+
+\begin{enumerate}
+\item Desarrollar un compilador completo funcional para un lenguaje de programación en Quechua.
+\item Implementar todas las etapas de compilación: léxico, sintáctico, semántico y generación de código~\cite{b1}.
+\item Crear herramientas visuales innovadoras para la comprensión del proceso de compilación.
+\item Proporcionar una extensión de VS Code para mejorar la experiencia de desarrollo.
+\item Demostrar la viabilidad de desarrollar herramientas de programación en lenguas indígenas~\cite{b3}.
+\end{enumerate}
+
+Este trabajo abre nuevas posibilidades para la preservación y promoción de lenguas originarias en contextos tecnológicos, mientras proporciona una herramienta educativa valiosa para la enseñanza de conceptos de compiladores y programación.
+
+El proyecto WayraSimi no solo cumple con los objetivos técnicos planteados, sino que también contribuye a la diversidad lingüística en el ámbito de la programación, honrando las tradiciones culturales andinas mientras abraza las innovaciones tecnológicas contemporáneas~\cite{b2}.
+
+\begin{thebibliography}{00}
+\bibitem{b1} Aho, A. V., Lam, M. S., Sethi, R., \& Ullman, J. D. (2006). \textit{Compilers: Principles, techniques, and tools}. Addison-Wesley.
+\bibitem{b2} Appel, A. W. (2002). \textit{Modern compiler implementation in Java}. Cambridge University Press.
+\bibitem{b3} Grune, D., Van Reeuwijk, K., Bal, H. E., Jacobs, C. J., \& Langendoen, K. (2012). \textit{Modern compiler design}. Springer Science \& Business Media.
+\end{thebibliography}
+
+\end{document}
