@@ -24,7 +24,7 @@ class GeneradorMIPS:
         self.global_vars = set()
         self.local_vars = set()
         self.current_function = None
-        self.scope_manager = scope_manager  # Guardar referencia si se necesita
+        self.scope_manager = scope_manager  
         self.codigo.append('.data')
         self._recorrer_variables_y_mensajes(nodo)
         for var in sorted(self.global_vars):
@@ -51,7 +51,6 @@ class GeneradorMIPS:
             self._recorrer_variables_y_mensajes(hijo)
 
     def _recoger_funciones_ast(self, nodo):
-        # Busca nodos 'OneDefinition' y extrae nombre y bloque
         if hasattr(nodo, 'valor') and nodo.valor == 'OneDefinition':
             nombre = None
             bloque = None
@@ -62,7 +61,6 @@ class GeneradorMIPS:
                     bloque = h
             if nombre and bloque:
                 self.funciones[nombre] = bloque
-        # Recorrer todos los hijos, incluso si el nodo raíz es 'Program' o similar
         for hijo in getattr(nodo, 'hijos', []):
             self._recoger_funciones_ast(hijo)
 
@@ -81,7 +79,6 @@ class GeneradorMIPS:
             self.codigo.append('    jr $ra')
 
     def _emitir_bloque(self, nodo):
-        # Recorre todos los hijos y emite instrucciones relevantes
         for h in getattr(nodo, 'hijos', []):
             self._emitir_sentencia(h)
 
@@ -106,7 +103,6 @@ class GeneradorMIPS:
         elif v in ('FunctionCall', 'llamada_funcion'):
             self._emitir_llamada_funcion(nodo)
         elif v == 'DeclaracionVariable':
-            # Declaración de variable: si tiene inicialización, emitir asignación
             nombre = None
             expr = None
             for h in nodo.hijos:
@@ -134,7 +130,6 @@ class GeneradorMIPS:
             self.codigo.append(f'    sw $t0, {nombre}')
 
     def _emitir_expresion(self, nodo):
-        # Soporta suma, resta, multiplicación, división, llamadas y variables
         if hasattr(nodo, 'valor'):
             v = nodo.valor
             if v == 'IDENTIFICADOR_TOKEN' and nodo.hijos:
@@ -181,7 +176,6 @@ class GeneradorMIPS:
         self.codigo.append('    syscall')
 
     def _emitir_if(self, nodo, es_else=False):
-        # Soporta if y else if/else
         hijos = nodo.hijos
         if not hijos:
             return
@@ -194,7 +188,7 @@ class GeneradorMIPS:
             self._emitir_sentencia(cuerpo)
         self.codigo.append(f'    j {etiqueta_fin}')
         self.codigo.append(f'{etiqueta_else}:')
-        # Si hay else, emitirlo
+        
         if len(hijos) > 2:
             self._emitir_sentencia(hijos[2])
         self.codigo.append(f'{etiqueta_fin}:')
@@ -204,7 +198,7 @@ class GeneradorMIPS:
         return True
 
     def _emitir_condicion(self, nodo, etiqueta_salto):
-        # Solo soporta comparaciones simples
+        
         if hasattr(nodo, 'valor') and nodo.valor == 'Condition':
             izq, op, der = nodo.hijos
             self._emitir_expresion(izq)
@@ -226,7 +220,6 @@ class GeneradorMIPS:
                     self.codigo.append('    blt $t1, $t2, ' + etiqueta_salto)
 
     def _emitir_return(self, nodo):
-        # Retorna el valor de la expresión
         for h in nodo.hijos:
             if hasattr(h, 'valor') and h.valor in ('YUPAY_TOKEN', 'Expression', 'IDENTIFICADOR_TOKEN'):
                 self._emitir_expresion(h)
@@ -234,7 +227,7 @@ class GeneradorMIPS:
         self.codigo.append('    jr $ra')
 
     def _emitir_llamada_funcion(self, nodo, retorna=False):
-        # Solo soporta un argumento
+        
         nombre = None
         arg = None
         for h in nodo.hijos:
@@ -252,7 +245,6 @@ class GeneradorMIPS:
             self.codigo.append('    move $t0, $v0')
 
     def _nombre_funcion(self, nodo):
-        # Busca el nombre de la función
         for h in nodo.hijos:
             if hasattr(h, 'valor') and h.valor == 'IDENTIFICADOR_TOKEN' and h.hijos:
                 return str(h.hijos[0].valor)
